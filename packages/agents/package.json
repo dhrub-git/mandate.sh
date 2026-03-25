@@ -1,0 +1,37 @@
+{
+  "name": "@repo/agents",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lancedb/lancedb": "^0.26.2",
+    "@langchain/community": "^1.1.12",
+    "@langchain/core": "^1.1.19",
+    "@langchain/exa": "^1.0.1",
+    "@langchain/google-genai": "^2.1.15",
+    "@langchain/langgraph": "^1.1.4",
+    "@langchain/openai": "^1.2.5",
+    "@langchain/textsplitters": "^1.0.1",
+    "@types/pdf-parse": "^1.1.5",
+    "apache-arrow": "^18.1.0",
+    "dotenv": "^16.4.7",
+    "exa-js": "^1.10.2",
+    "langchain": "^1.2.18",
+    "pdf-parse": "^2.4.5",
+    "promptfoo": "^0.120.19",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/node": "^22.15.3",
+    "eslint": "^9.39.1",
+    "typescript": "5.9.2"
+  }
+}

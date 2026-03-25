@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  onboarded Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+}
+
+model Company {
+  id               String              @id @default(cuid())
+  name             String
+  address          String
+  industry         Industry
+  employeeCount    EmployeeCount
+  revenue          RevenueRange
+  operatingRegions String[]
+  euInteraction    AIInteraction?
+  certifications   String[]
+  governance       GovernanceStructure
+  aiRole           AIRole
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  users            User[]
+}
+
+enum Industry {
+  TECHNOLOGY
+  HEALTHCARE
+  FINANCIAL_SERVICES
+  INSURANCE
+  EDUCATION
+  LEGAL
+  MANUFACTURING
+  RETAIL
+  GOVERNMENT
+  CRITICAL_INFRASTRUCTURE
+  LAW_ENFORCEMENT
+  HR
+  OTHER
+}
+
+enum EmployeeCount {
+  ONE_TO_49
+  FIFTY_TO_99
+  ONE_HUNDRED_TO_249
+  TWO_HUNDRED_FIFTY_TO_499
+  FIVE_HUNDRED_TO_999
+  ONE_THOUSAND_PLUS
+}
+
+enum RevenueRange {
+  UNDER_2M
+  TWO_TO_10M
+  TEN_TO_50M
+  FIFTY_TO_250M
+  OVER_250M
+}
+
+enum AIInteraction {
+  DIRECT_EU_CUSTOMERS
+  AI_OUTPUT_REACHES_EU
+  NO
+  NOT_SURE
+}
+
+enum GovernanceStructure {
+  DEDICATED_COMMITTEE
+  PART_OF_EXISTING
+  NO_FORMAL_STRUCTURE
+  NO_GOVERNANCE
+}
+
+enum AIRole {
+  PROVIDER
+  DEPLOYER
+  BOTH
+  NOT_SURE
+}

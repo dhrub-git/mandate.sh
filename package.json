@@ -1,0 +1,52 @@
+{
+  "name": "mandate-main",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
+  "devDependencies": {
+    "@tailwindcss/oxide-darwin-arm64": "^4.2.0",
+    "@types/pdf-parse": "^1.1.5",
+    "lightningcss-darwin-arm64": "^1.31.1",
+    "prettier": "^3.7.4",
+    "turbo": "^2.8.2",
+    "typescript": "5.9.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "@ai-sdk/google": "^3.0.26",
+    "@ai-sdk/langchain": "^2.0.74",
+    "@google/generative-ai": "^0.24.1",
+    "@langchain/core": "^1.1.19",
+    "@langchain/google-genai": "^2.1.18",
+    "@langchain/langgraph": "^1.1.4",
+    "@langchain/langgraph-checkpoint-postgres": "^1.0.1",
+    "@langchain/openai": "^1.2.5",
+    "@repo/agents": "^0.0.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "ai": "^6.0.82",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.3",
+    "html2pdf.js": "^0.14.0",
+    "langchain": "^1.2.18",
+    "next": "^16.1.6",
+    "pdf-parse": "^2.4.5",
+    "promptfoo": "^0.120.19",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "zod": "^4.3.6"
+  }
+}
