@@ -13,7 +13,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Mandate Main - AI Governance Platform",
+  title: "Mandate.sh - AI Governance Platform",
   description: "Get personalized AI compliance guidance",
 };
 

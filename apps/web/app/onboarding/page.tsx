@@ -128,7 +128,7 @@ export default function OnboardingWizard() {
       <nav className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <span className="text-2xl font-bold tracking-tight text-primary">
-            Mandate-Main
+            Mandate.sh
           </span>
           <div className="text-sm text-muted-foreground">
             Questions? (800) 936-0383
