@@ -1,6 +1,7 @@
 import DashboardContent from "@/components/dashboard/dashboard-content";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import Loading from "./loading";
 
 type DashboardPageProps = {
   searchParams: Promise<{ thread?: string; q?: string; s?: string }>;
@@ -31,7 +32,7 @@ export default async function DashboardPage({
   }
   
   return (
-    <Suspense fallback={<div />}>
+    <Suspense fallback={<Loading />}>
       <DashboardContent
         threadId={threadId}
         initialQuestion={initialQuestion}
