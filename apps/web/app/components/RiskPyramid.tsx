@@ -1,29 +1,11 @@
 "use client";
 
 import { useState } from "react";
-
-type RiskTier = "PROHIBITED" | "HIGH_RISK" | "LIMITED_RISK" | "MINIMAL_RISK";
-
-type RiskClassification = {
-  systemName: string;
-  tier: RiskTier;
-  tierLevel: 1 | 2 | 3 | 4;
-  reasoning: string;
-  article: string;
-  annexDomain?: string;
-  requirements?: string[];
-};
-
-type ClassificationResult = {
-  systems: RiskClassification[];
-  summary: {
-    total: number;
-    prohibited: number;
-    highRisk: number;
-    limitedRisk: number;
-    minimalRisk: number;
-  };
-};
+import type {
+  MandateRiskTier as RiskTier,
+  MandateRiskClassification as RiskClassification,
+  MandateClassificationResult as ClassificationResult,
+} from "@repo/agents";
 
 const TIER_CONFIG = {
   PROHIBITED: {

@@ -23,6 +23,7 @@ import { cn } from "@repo/ui/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import RiskPyramid from "./RiskPyramid";
+import type { MandateClassificationResult } from "@repo/agents";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type WorkflowStatus = "interrupt" | "completed" | "running" | "error";
@@ -57,7 +58,7 @@ type ChatInterfaceProps = {
   initialDrafts?: Record<string, string>;
   initialStagesComplete?: string[];
   initialActiveStage?: string | null;
-  initialRiskClassifications?: any;
+  initialRiskClassifications?: MandateClassificationResult;
 };
 
 // ─── Stage order ──────────────────────────────────────────────────────────────
@@ -987,7 +988,7 @@ export function ChatInterface({
   const [error, setError] = useState<string | undefined>(errorMessage);
   const [copiedPolicies, setCopiedPolicies] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false); // <-- NEW STATE FOR PDF
-  const [riskClassifications, setRiskClassifications] = useState<any | undefined>(initialRiskClassifications);
+  const [riskClassifications, setRiskClassifications] = useState<MandateClassificationResult | undefined>(initialRiskClassifications);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);

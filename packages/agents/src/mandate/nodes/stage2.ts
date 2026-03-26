@@ -66,7 +66,7 @@ const response = await modelWithTools.invoke(cleanMessages);
         aiRole: onboarding.aiRole || "BOTH",
         euInteraction: onboarding.euInteraction,
       };
-    } catch { /* use defaults */ }
+    } catch (e) { console.error("Failed to parse onboarding data for risk classification:", e); }
     const riskClassifications = classifyAISystems(parsedSystems, companyContext);
     console.log("Risk Classifications:", JSON.stringify(riskClassifications.summary));
 
