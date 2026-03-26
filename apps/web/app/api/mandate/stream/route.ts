@@ -83,6 +83,8 @@ export async function POST(req: NextRequest) {
               payload.draft_policy_3 = output.draft_policy_3;
             if (output?.draft_policy_4)
               payload.draft_policy_4 = output.draft_policy_4;
+            if (output?.risk_classifications)
+              payload.risk_classifications = output.risk_classifications;
             send("node_complete", payload);
           }
           // --- LLM token streaming ---

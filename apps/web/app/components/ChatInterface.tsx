@@ -22,6 +22,7 @@ import {
 import { cn } from "@repo/ui/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import RiskPyramid from "./RiskPyramid";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type WorkflowStatus = "interrupt" | "completed" | "running" | "error";
@@ -56,6 +57,7 @@ type ChatInterfaceProps = {
   initialDrafts?: Record<string, string>;
   initialStagesComplete?: string[];
   initialActiveStage?: string | null;
+  initialRiskClassifications?: any;
 };
 
 // ─── Stage order ──────────────────────────────────────────────────────────────
@@ -975,6 +977,7 @@ export function ChatInterface({
   initialDrafts = {},
   initialStagesComplete =[],
   initialActiveStage = null,
+  initialRiskClassifications,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -984,6 +987,7 @@ export function ChatInterface({
   const [error, setError] = useState<string | undefined>(errorMessage);
   const [copiedPolicies, setCopiedPolicies] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false); // <-- NEW STATE FOR PDF
+  const [riskClassifications, setRiskClassifications] = useState<any | undefined>(initialRiskClassifications);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -1127,6 +1131,11 @@ export function ChatInterface({
       }
     };
     extractDraftsDeep(data);
+
+    // Extract risk classifications from SSE data
+    if (data?.risk_classifications) {
+      setRiskClassifications(data.risk_classifications);
+    }
 
     switch (eventName) {
       case "node_start":
@@ -1367,6 +1376,10 @@ export function ChatInterface({
             activeStage={activeStage}
             stagesComplete={stagesComplete}
           />
+        )}
+
+        {riskClassifications && stagesComplete.has("stage_2") && !policies && (
+          <RiskPyramid classifications={riskClassifications} />
         )}
 
         <DraftPolicy

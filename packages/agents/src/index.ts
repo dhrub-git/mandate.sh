@@ -10,3 +10,4 @@ export{
 }from "./mandate"
 
 export type { WorkflowState as MandateWorkflowState } from "./mandate";
+export type { ClassificationResult as MandateClassificationResult, RiskClassification as MandateRiskClassification, RiskTier as MandateRiskTier } from "./mandate";
