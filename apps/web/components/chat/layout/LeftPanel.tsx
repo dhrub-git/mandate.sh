@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Loader2, Copy, Download, CheckCircle2 } from "lucide-react";
+import { FileText, Loader2, Copy, Download, CheckCircle2, Sparkles } from "lucide-react";
 import { StageProgressBar } from "../policy/StageProgressBar";
 import { DraftPolicy } from "../policy/DraftPolicy";
 import { AgentActivityStrip } from "../agent/AgentActivityStrip";
@@ -37,6 +37,8 @@ export default function LeftPanel(props: {
   onDownload: () => void;
   selectedPolicyVersion: number | null;
   setSelectedPolicyVersion: (version: number | null) => void;
+  onGenerateSummary: () => void;
+  isGeneratingSummary: boolean;
 }) {
   const {
     policies,
@@ -55,6 +57,8 @@ export default function LeftPanel(props: {
     onDownload,
     selectedPolicyVersion,
     setSelectedPolicyVersion,
+    onGenerateSummary,
+    isGeneratingSummary,
   } = props;
 
   const leftPanelTitle = policies.current
@@ -120,6 +124,19 @@ export default function LeftPanel(props: {
                       <Download className="h-3 w-3" />
                     )}
                     {isDownloading ? "Saving..." : "PDF"}
+                  </button>
+
+                  <button
+                    onClick={onGenerateSummary}
+                    disabled={isGeneratingSummary}
+                    className="text-[11px] font-medium flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 rounded px-2.5 py-1 transition-colors disabled:opacity-50"
+                  >
+                    {isGeneratingSummary ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    {isGeneratingSummary ? "Generating..." : "Summary"}
                   </button>
                 </div>
               )}

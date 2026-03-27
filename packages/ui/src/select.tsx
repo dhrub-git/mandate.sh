@@ -178,7 +178,7 @@ function SelectScrollDownButton({
   )
 }
 
-export interface SelectProps {
+interface SelectProps {
   label?: string;
   options: { label: string; value: string }[];
   value: string;
@@ -186,7 +186,7 @@ export interface SelectProps {
   className?: string;
 }
 
-export const SelectPrime: React.FC<SelectProps> = ({
+const SelectPrime: React.FC<SelectProps> = ({
   label,
   options,
   value,
@@ -256,4 +256,9 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
+  SelectPrime,
+}
+
+export type {
+  SelectProps,
 }

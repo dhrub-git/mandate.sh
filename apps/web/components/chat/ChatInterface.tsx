@@ -16,6 +16,8 @@ import {
 } from "@/context/chat/PolicyAgentContext";
 import { Policy } from "@repo/database";
 import { generatePolicyPDF } from "@/lib/downloadPolicy";
+import { ExecutiveSummaryModal } from "./modals/ExecutiveSummaryModel";
+import { generateExecutiveSummary, type SummaryOutput } from "@/actions/summary-actions";
 
 type ChatInterfaceProps = {
   threadId: string;
@@ -57,6 +59,11 @@ export function ChatInterface({
   const [error, setError] = useState<string | undefined>(errorMessage);
   const [copiedPolicies, setCopiedPolicies] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false); // <-- NEW STATE FOR PDF
+  //States for Summary Modal
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [summaryData, setSummaryData] = useState<SummaryOutput | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false); 
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -391,6 +398,27 @@ export function ChatInterface({
     streamIntoPolicyState(fullContent);
   };
 
+  //SummaryHandler
+  const handleGenerateSummary = async () => {
+    setShowSummaryModal(true);
+    setIsGeneratingSummary(true);
+    setSummaryError(null);
+    setSummaryData(null);
+    const result = await generateExecutiveSummary(threadId);
+
+    if (result.success) {
+      setSummaryData(result.data);
+    } else {
+      setSummaryError(result.error);
+    }
+    setIsGeneratingSummary(false);
+
+  };
+
+  const handlecloseSummaryModal = () => {
+    setShowSummaryModal(false);
+  };
+
   return (
     <PolicyAgentProvider threadId={threadId} setPolicyUpdate={setPolicyUpdate}>
       <ChatLayout
@@ -412,6 +440,8 @@ export function ChatInterface({
             onDownload={handleDownloadPdf}
             selectedPolicyVersion={selectedPolicyVersion}
             setSelectedPolicyVersion={setSelectedPolicyVersion}
+            onGenerateSummary={handleGenerateSummary}
+            isGeneratingSummary={isGeneratingSummary}
           />
         }
         right={
@@ -432,3 +462,4 @@ export function ChatInterface({
     </PolicyAgentProvider>
   );
 }
+

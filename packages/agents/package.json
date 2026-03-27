@@ -10,7 +10,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@lancedb/lancedb": "^0.26.2",
+    "@lancedb/lancedb": "^0.19.1",
     "@langchain/community": "^1.1.12",
     "@langchain/core": "^1.1.19",
     "@langchain/exa": "^1.0.1",

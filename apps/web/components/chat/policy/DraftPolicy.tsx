@@ -21,10 +21,12 @@ export function DraftPolicy({
   backendDrafts: Record<string, string>;
 }) {
   if (finalPolicy) {
-     // RUN THE FORMATTER HERE
-    // const formattedPolicy = formatFinalPolicy(finalPolicy); 
+    // RUN THE FORMATTER HERE
+    // const formattedPolicy = formatFinalPolicy(finalPolicy);
     return (
-<div className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50 dark:bg-zinc-950 print:block print:p-0 print:bg-white print:overflow-visible">        {/* Document "Page" Wrapper */}
+      <div className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50 dark:bg-zinc-950 print:block print:p-0 print:bg-white print:overflow-visible">
+        {" "}
+        {/* Document "Page" Wrapper */}
         <div
           id="final-policy-document"
           className="max-w-4xl mx-auto bg-white dark:bg-zinc-900 rounded-xl p-8 lg:p-12 border border-gray-200 dark:border-zinc-800 shadow-lg relative print:max-w-none print:border-none print:shadow-none print:p-0 print:m-0"

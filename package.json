@@ -38,6 +38,7 @@
     "dotenv": "^17.2.3",
     "html2pdf.js": "^0.14.0",
     "langchain": "^1.2.18",
+    "mysql2": "3.19.1",
     "next": "^16.1.6",
     "pdf-parse": "^2.4.5",
     "promptfoo": "^0.120.19",
