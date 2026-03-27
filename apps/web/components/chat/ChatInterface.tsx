@@ -15,6 +15,7 @@ import {
   PolicyUpdateProps,
 } from "@/context/chat/PolicyAgentContext";
 import { Policy } from "@repo/database";
+import { generatePolicyPDF } from "@/lib/downloadPolicy";
 
 type ChatInterfaceProps = {
   threadId: string;
@@ -301,7 +302,29 @@ export function ChatInterface({
   };
   // ─── NEW: PDF DOWNLOAD HANDLER ──────────────────────────────────────────────
   const handleDownloadPdf = async () => {
-    window.print();
+    if (!companyProfile || !PolicyDocumentsState.current) return;
+
+    const buffer = await generatePolicyPDF(
+      companyProfile,
+      PolicyDocumentsState.current,
+    );
+
+    // Normalize buffer → ArrayBuffer
+    const arrayBuffer = buffer instanceof Uint8Array ?(buffer.buffer as ArrayBuffer) : buffer;
+
+    const blob = new Blob([arrayBuffer], { type: "application/pdf" });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${companyProfile.name}_AI_Governance_Policy.pdf`;
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
   };
 
   // ─── UTILITY: CHUNK TEXT INTO WORDS FOR STREAMING EFFECT ─────────────────
@@ -349,7 +372,7 @@ export function ChatInterface({
     }
   };
 
-  // ─── HANDLER FOR POLICY UPDATES FROM THE BACKEND ─────────────────────────────
+  // ─── POLICY UPDATE HANDLER: IMMEDIATE METADATA UPDATE + STREAMING CONTENT ──────────────────────────────────────────────
   const setPolicyUpdate = (update: PolicyUpdateProps) => {
     const fullContent = update.updatedPolicy.content;
 

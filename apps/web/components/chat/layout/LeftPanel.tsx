@@ -7,7 +7,8 @@ import { AgentActivityStrip } from "../agent/AgentActivityStrip";
 import { Policy } from "@repo/database";
 import { useMemo, useState } from "react";
 import VersionDropdown from "../policy/VersionDropdown";
-import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
+import { StatusBadge } from "../policy/StatusBadge";
+import { PolicyVersionTimeline } from "../policy/PolicyVersionTimeline";
 
 interface PolicyDocuments {
   current: Policy | null;
@@ -56,7 +57,9 @@ export default function LeftPanel(props: {
     setSelectedPolicyVersion,
   } = props;
 
-  const leftPanelTitle = policies ? "AI Governance Policies" : "Policy Draft";
+  const leftPanelTitle = policies.current
+    ? `AI Governance Policies - Policy Status: ${policies.current.status}`
+    : "Policy Draft";
 
   const leftPanelSubtitle = policies
     ? "Your final AI governance document"
@@ -86,7 +89,9 @@ export default function LeftPanel(props: {
 
               {policies.current && (
                 <div className="flex items-center gap-2 ml-2">
-                  <VersionDropdown 
+                  <StatusBadge status={policies.current.status} />
+
+                  <VersionDropdown
                     versions={[policies.current, ...policies.versions]}
                     currentVersion={selectedPolicyVersion}
                     onSelectVersion={setSelectedPolicyVersion}
@@ -159,6 +164,14 @@ export default function LeftPanel(props: {
           currentNode={currentNode}
           streamingText={streamingText}
           isStreaming={isStreaming}
+        />
+      )}
+
+      {policies.current && (
+        <PolicyVersionTimeline
+          policies={[policies.current, ...policies.versions]}
+          currentPolicyId={selectedPolicyVersion}
+          onSelectVersion={(p) => setSelectedPolicyVersion(p)}
         />
       )}
     </>
