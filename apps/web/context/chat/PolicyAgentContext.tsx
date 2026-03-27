@@ -3,7 +3,7 @@ import { ChatStatus, DefaultChatTransport } from "ai";
 import { createContext, useContext, useState } from "react";
 import { useChat, UseChatHelpers } from "@ai-sdk/react";
 import { fetchWithErrorHandlers } from "@/utils/ai-utils";
-import { version } from "os";
+import { Policy } from "@repo/database";
 
 interface PolicyAgentContextValue {
   messages: ChatMessageAI[];
@@ -19,6 +19,8 @@ export interface PolicyUpdateProps {
   sectionId: string;
   rewrittenInfo: string;
   changeNotes: string;
+  version: number;
+  updatedPolicy: Policy;
 }
 
 interface PolicyAgentProviderProps {

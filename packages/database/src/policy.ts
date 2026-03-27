@@ -1,3 +1,4 @@
+import { version } from "os";
 import { db } from ".";
 import { PolicyStatus } from "@prisma/client";
 
@@ -38,10 +39,13 @@ export async function getPoliciesByCompany(threadId: string) {
     });
 
     if (policies.length === 0) {
-        throw new Error("No policies found for this thread");
+        return {
+            current: null,
+            versions: [],
+        }
     }
     // Get the latest version of policy in the thread
-    const latestPolicy = policies[0];
+    const latestPolicy = policies[0]!;
     return {
         current: latestPolicy,
         versions: policies.slice(1), // All previous versions
@@ -84,11 +88,15 @@ export async function updatePolicyContent(
     threadId: string,
     updatedSectionContent: string,
     sectionId: string,
-    changeNote: string
+    changeNote: string,
+    version: number | null,
 ) {
     // 1. Get latest policy
     const latestPolicy = await db.policy.findFirst({
-        where: { threadId },
+        where: { 
+            threadId,
+            ...(version ? { version } : {}) // If version is provided, filter by it
+        },
         orderBy: { createdAt: "desc" },
     });
 

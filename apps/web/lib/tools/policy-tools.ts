@@ -4,6 +4,7 @@ import z from "zod";
 import { aiGovernancePolicySpec } from "@repo/agents";
 import { google } from "@ai-sdk/google";
 import { updatePolicyContent } from "@repo/database";
+import { PolicyUpdateProps } from "@/context/chat/PolicyAgentContext";
 
 const sectionIds = z
     .enum([
@@ -50,13 +51,13 @@ export const findSectionContextTool = tool({
 });
 
 const generateRewritePrompt = (
-  originalSection: string,
-  companyInfo: string,
-  updateRequirement: string,
-  generationSpecifics: string,
-  sectionId: string,
+    originalSection: string,
+    companyInfo: string,
+    updateRequirement: string,
+    generationSpecifics: string,
+    sectionId: string,
 ): string => {
-  return `
+    return `
 You are an expert policy writer and compliance specialist.
 
 Your task is to update a policy section based on new requirements.
@@ -124,6 +125,7 @@ Generate the output now.
 export const rewriteForSectionTool = (
     dataStream: UIMessageStreamWriter<ChatMessageAI>,
     threadId: string,
+    version: number | null,
 ) =>
     tool({
         description: `
@@ -203,16 +205,18 @@ export const rewriteForSectionTool = (
                     })
                 });
 
-                await updatePolicyContent(threadId, rewrittenInfo.output.text, sectionId, rewrittenInfo.output.changeNotes);
+                const updatedPolicy = await updatePolicyContent(threadId, rewrittenInfo.output.text, sectionId, rewrittenInfo.output.changeNotes, version);
 
                 dataStream.write({
                     id: `rewrite-${sectionId}-${Date.now()}`,
                     type: "data-update-section",
                     data: {
-                        sectionId,
+                        updatedPolicy,
+                        sectionId: sectionId,
                         rewrittenInfo: rewrittenInfo.output.text,
                         changeNotes: rewrittenInfo.output.changeNotes,
-                    },
+                        version: updatedPolicy.version,
+                    } satisfies PolicyUpdateProps,
                 });
 
                 return rewrittenInfo.output;

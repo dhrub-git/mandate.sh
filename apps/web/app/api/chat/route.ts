@@ -92,6 +92,9 @@ export async function POST(req: Request) {
 
   try {
     const draftPolicy = await getPoliciesByCompany(threadId);
+    if (!draftPolicy.current) {
+      throw new ChatSDKError("bad_request:chat", "No existing policy found for this thread");
+    }
     const currentPolicyContent = version ? draftPolicy.versions.find((v) => v.version === version)!.content : draftPolicy.current!.content;
     const companyInfo = await getCompanyInfo(draftPolicy.current!.companyId); // Implement this function to fetch company info based on threadId
     const stream = createUIMessageStream({
@@ -110,7 +113,7 @@ export async function POST(req: Request) {
           toolChoice: "auto",
           tools: {
             findSectionContext: findSectionContextTool,
-            rewriteForSection: rewriteForSectionTool(dataStream, threadId),
+            rewriteForSection: rewriteForSectionTool(dataStream, threadId, version ?? null),
           },
           stopWhen: stepCountIs(5),
           experimental_transform: smoothStream({ chunking: "word" }),

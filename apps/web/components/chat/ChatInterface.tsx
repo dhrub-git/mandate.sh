@@ -14,6 +14,7 @@ import {
   PolicyAgentProvider,
   PolicyUpdateProps,
 } from "@/context/chat/PolicyAgentContext";
+import { Policy } from "@repo/database";
 
 type ChatInterfaceProps = {
   threadId: string;
@@ -26,6 +27,11 @@ type ChatInterfaceProps = {
   initialDrafts?: Record<string, string>;
   initialStagesComplete?: string[];
   initialActiveStage?: string | null;
+
+  PolicyDocuments: {
+    current: Policy | null;
+    versions: Policy[];
+  };
 };
 
 // ─── ChatInterface ────────────────────────────────────────────────────────────
@@ -40,6 +46,7 @@ export function ChatInterface({
   initialDrafts = {},
   initialStagesComplete = [],
   initialActiveStage = null,
+  PolicyDocuments,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -69,6 +76,13 @@ export function ChatInterface({
   const [questionCount, setQuestionCount] = useState(initialQuestion ? 1 : 0);
   const [backendDrafts, setBackendDrafts] =
     useState<Record<string, string>>(initialDrafts);
+  const [PolicyDocumentsState, setPolicyDocumentsState] = useState<{
+    current: Policy | null;
+    versions: Policy[];
+  }>(PolicyDocuments);
+  const [selectedPolicyVersion, setSelectedPolicyVersion] = useState<
+    number | null
+  >(PolicyDocuments.current ? PolicyDocuments.current.version : null);
 
   // 5. Update the initialQuestion effect to avoid duplicate messages on refresh
   useEffect(() => {
@@ -287,49 +301,79 @@ export function ChatInterface({
   };
   // ─── NEW: PDF DOWNLOAD HANDLER ──────────────────────────────────────────────
   const handleDownloadPdf = async () => {
-    // setIsDownloading(true);
-    // try {
-    //   const element = document.getElementById("final-policy-document");
-    //   if (!element) throw new Error("Document element not found");
-
-    //   // Dynamically import to bypass Next.js SSR document/window errors
-    //   const html2pdf = (await import("html2pdf.js")).default;
-
-    //   const fileName = companyProfile?.name
-    //     ? `${companyProfile.name.replace(/\s+/g, "_")}_AI_Policy.pdf`
-    //     : "AI_Governance_Policy.pdf";
-
-    //   const opt = {
-    //     // Fix: Use 'as const' to tell TypeScript this is exactly a 4-number tuple
-    //     margin:[15, 15, 15, 15] as [number, number, number, number],
-    //     filename: fileName,
-    //     image: { type: "jpeg" as const, quality: 0.98 },
-    //     html2canvas: {
-    //       scale: 2,
-    //       useCORS: true,
-    //       logging: false,
-    //       windowWidth: 1024 // Forces desktop rendering of tailwind classes
-    //     },
-    //     jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const }
-    //   };
-
-    //   await html2pdf().set(opt).from(element).save();
-    // } catch (err) {
-    //   console.error("Error generating PDF:", err);
-    // } finally {
-    //   setIsDownloading(false);
-    // }
     window.print();
   };
 
-  const setPolicyUpdate = (update: PolicyUpdateProps) => {};
+  // ─── UTILITY: CHUNK TEXT INTO WORDS FOR STREAMING EFFECT ─────────────────
+  function chunkByWords(text: string, wordsPerChunk = 20) {
+    const words = text.split(" ");
+    const chunks: string[] = [];
+
+    for (let i = 0; i < words.length; i += wordsPerChunk) {
+      chunks.push(words.slice(i, i + wordsPerChunk).join(" ") + " ");
+    }
+
+    return chunks;
+  }
+
+  const streamIntoPolicyState = async (fullText: string) => {
+    const chunks = chunkByWords(fullText, 20);
+
+    // reset content first
+    setPolicyDocumentsState((prev) => {
+      if (!prev.current) return prev;
+
+      return {
+        ...prev,
+        current: {
+          ...prev.current,
+          content: "",
+        },
+      };
+    });
+
+    for (const chunk of chunks) {
+      await new Promise((r) => setTimeout(r, 10 + Math.random() * 30));
+
+      setPolicyDocumentsState((prev) => {
+        if (!prev.current) return prev;
+
+        return {
+          ...prev,
+          current: {
+            ...prev.current,
+            content: prev.current.content + chunk,
+          },
+        };
+      });
+    }
+  };
+
+  // ─── HANDLER FOR POLICY UPDATES FROM THE BACKEND ─────────────────────────────
+  const setPolicyUpdate = (update: PolicyUpdateProps) => {
+    const fullContent = update.updatedPolicy.content;
+
+    // immediately set metadata + empty content
+    setPolicyDocumentsState((prev) => ({
+      current: {
+        ...update.updatedPolicy,
+        content: "", // start empty
+      },
+      versions: [prev.current!, ...prev.versions],
+    }));
+
+    setSelectedPolicyVersion(update.updatedPolicy.version);
+
+    // stream into SAME state
+    streamIntoPolicyState(fullContent);
+  };
 
   return (
     <PolicyAgentProvider threadId={threadId} setPolicyUpdate={setPolicyUpdate}>
       <ChatLayout
         left={
           <LeftPanel
-            policies={policies}
+            policies={PolicyDocumentsState}
             companyProfile={companyProfile}
             isStreaming={isStreaming}
             activeStage={activeStage}
@@ -343,6 +387,8 @@ export function ChatInterface({
             isDownloading={isDownloading}
             onCopy={handleCopyPolicies}
             onDownload={handleDownloadPdf}
+            selectedPolicyVersion={selectedPolicyVersion}
+            setSelectedPolicyVersion={setSelectedPolicyVersion}
           />
         }
         right={

@@ -1,18 +1,21 @@
 "use client";
 
-import {
-  FileText,
-  Loader2,
-  Copy,
-  Download,
-  CheckCircle2,
-} from "lucide-react";
+import { FileText, Loader2, Copy, Download, CheckCircle2 } from "lucide-react";
 import { StageProgressBar } from "../policy/StageProgressBar";
 import { DraftPolicy } from "../policy/DraftPolicy";
 import { AgentActivityStrip } from "../agent/AgentActivityStrip";
+import { Policy } from "@repo/database";
+import { useMemo, useState } from "react";
+import VersionDropdown from "../policy/VersionDropdown";
+import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
+
+interface PolicyDocuments {
+  current: Policy | null;
+  versions: Policy[] | never[];
+}
 
 export default function LeftPanel(props: {
-  policies?: string;
+  policies: PolicyDocuments;
   companyProfile: any;
   isStreaming: boolean;
 
@@ -31,6 +34,8 @@ export default function LeftPanel(props: {
 
   onCopy: () => void;
   onDownload: () => void;
+  selectedPolicyVersion: number | null;
+  setSelectedPolicyVersion: (version: number | null) => void;
 }) {
   const {
     policies,
@@ -47,17 +52,24 @@ export default function LeftPanel(props: {
     isDownloading,
     onCopy,
     onDownload,
+    selectedPolicyVersion,
+    setSelectedPolicyVersion,
   } = props;
 
-  const leftPanelTitle = policies
-    ? "AI Governance Policies"
-    : "Policy Draft";
+  const leftPanelTitle = policies ? "AI Governance Policies" : "Policy Draft";
 
   const leftPanelSubtitle = policies
     ? "Your final AI governance document"
     : questionCount > 0
       ? `${questionCount} question${questionCount !== 1 ? "s" : ""} answered — draft updates as you go`
       : "Sections fill in as you answer questions";
+  const selectedPolicy = useMemo(() => {
+    if (!policies || !selectedPolicyVersion) return null;
+    return (
+      policies.versions.find((v) => v.version === selectedPolicyVersion) ||
+      policies.current
+    );
+  }, [policies, selectedPolicyVersion]);
 
   return (
     <>
@@ -72,8 +84,14 @@ export default function LeftPanel(props: {
                 {leftPanelTitle}
               </h2>
 
-              {policies && (
+              {policies.current && (
                 <div className="flex items-center gap-2 ml-2">
+                  <VersionDropdown 
+                    versions={[policies.current, ...policies.versions]}
+                    currentVersion={selectedPolicyVersion}
+                    onSelectVersion={setSelectedPolicyVersion}
+                  />
+
                   <button
                     onClick={onCopy}
                     className="text-[11px] font-medium flex items-center gap-1 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-200 dark:border-zinc-700 rounded px-2.5 py-1 transition-colors"
@@ -130,7 +148,7 @@ export default function LeftPanel(props: {
         activeStage={activeStage}
         stagesComplete={stagesComplete}
         questionCount={questionCount}
-        finalPolicy={policies}
+        finalPolicy={selectedPolicy ? selectedPolicy.content : undefined}
         backendDrafts={backendDrafts}
       />
 

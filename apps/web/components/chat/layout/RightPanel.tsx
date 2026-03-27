@@ -87,7 +87,7 @@ export default function RightPanel(props: {
       />
 
       {/* INPUT */}
-      {status === "interrupt" && (
+      {(status === "interrupt" || isUpdatingPolicy) && (
         <ChatInput
           input={input}
           setInput={setInput}
