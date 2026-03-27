@@ -51,6 +51,27 @@ model Policy {
   updatedAt  DateTime     @updatedAt
 
   company Company @relation(fields: [companyId], references: [id])
+  variants PolicyVariant[]
+}
+
+model PolicyVariant {
+  id         String            @id @default(cuid())
+  policyId   String
+  variantType       PolicyVariantType
+  content    String            @db.Text
+  sections   Json
+  generatedAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@unique([policyId, variantType])
+}
+enum PolicyVariantType {
+  EXECUTIVE_SUMMARY
+  COMPREHENSIVE_POLICY
+  VENDOR_REQUIREMENTS
+  CODING_STANDARDS
 }
 
 enum PolicyStatus {
