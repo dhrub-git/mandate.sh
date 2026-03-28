@@ -53,8 +53,21 @@ export async function getPoliciesByCompany(threadId: string) {
     };
 }
 
+const VALID_TRANSITIONS: Record<PolicyStatus, PolicyStatus[]> = {
+  DRAFT:      ["IN_REVIEW"],
+  IN_REVIEW:  ["APPROVED", "REJECTED"],
+  REJECTED:   ["DRAFT"],
+  APPROVED:   ["PUBLISHED"],
+  PUBLISHED:  [],
+};
+
+function validateTransition(from: PolicyStatus, to: PolicyStatus): boolean {
+  return VALID_TRANSITIONS[from].includes(to);
+}
+
+
 /**
- * Updates an existing policy with a new status and optional change note
+ * Updates an existing policy with a new status and change note
  * @param policyId 
  * @param status 
  * @param changeNote 
@@ -63,19 +76,34 @@ export async function getPoliciesByCompany(threadId: string) {
 export async function updatePolicy(
     policyId: string,
     status: PolicyStatus,
-    changeNote?: string
+    changeNote: string
 ) {
-    const policy = await db.policy.update({
+    const existingPolicy = await db.policy.findUniqueOrThrow({
         where: {
             id: policyId,
         },
-        data: {
-            status,
-            ...(changeNote && changeNote.length > 0
-                ? { changeNote }
-                : {}),
-        },
     });
+    const currentVersionNumber = await db.policy.count({
+        where: {
+            threadId: existingPolicy.threadId,
+        }
+    })
+    if(!validateTransition(existingPolicy.status, status)) {
+        throw new Error(`Invalid status transition from ${existingPolicy.status} to ${status}`);
+    }
+    const policy = await db.policy.create({
+        data: {
+            companyId: existingPolicy.companyId,
+            threadId: existingPolicy.threadId,
+            content: existingPolicy.content,
+            sections: existingPolicy.sections as PolicySection[],
+            status,
+            changeNote,
+            version: currentVersionNumber + 1,
+            parentId: existingPolicy.id,
+
+        }
+    })
 
     return policy;
 }
@@ -147,6 +175,7 @@ export async function updatePolicyContent(
             version: currentVersion + 1,
             changeNote,
             status: latestPolicy.status,
+            parentId: latestPolicy.id,
         },
     });
 

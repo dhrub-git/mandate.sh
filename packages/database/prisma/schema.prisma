@@ -46,27 +46,31 @@ model Policy {
   sections   Json
   version    Int
   changeNote String?
+  parentId   String?
   status     PolicyStatus @default(DRAFT)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
-  company Company @relation(fields: [companyId], references: [id])
+  company  Company         @relation(fields: [companyId], references: [id])
   variants PolicyVariant[]
+
+  @@unique([threadId, version])
 }
 
 model PolicyVariant {
-  id         String            @id @default(cuid())
-  policyId   String
-  variantType       PolicyVariantType
-  content    String            @db.Text
-  sections   Json
-  generatedAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  id          String            @id @default(cuid())
+  policyId    String
+  variantType PolicyVariantType
+  content     String            @db.Text
+  sections    Json
+  generatedAt DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
 
   @@unique([policyId, variantType])
 }
+
 enum PolicyVariantType {
   EXECUTIVE_SUMMARY
   COMPREHENSIVE_POLICY
@@ -79,6 +83,7 @@ enum PolicyStatus {
   IN_REVIEW
   APPROVED
   PUBLISHED
+  REJECTED
 }
 
 enum Industry {
