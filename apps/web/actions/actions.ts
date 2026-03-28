@@ -16,6 +16,7 @@ import fs from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import { getPoliciesByCompany } from "../../../packages/database/src/policy";
+import { PolicyStatus, updatePolicy } from "@repo/database";
 
 // --- Types ---
 
@@ -818,4 +819,8 @@ export async function runTransparencyAgent(input: TransparencyInput) {
 
 export async function getPoliciesByThread(threadId: string) {
   return await getPoliciesByCompany(threadId);
+}
+
+export async function changePolicyStatus(policyId: string, newStatus: PolicyStatus, changeNote: string) {
+  return await updatePolicy(policyId, newStatus, changeNote);
 }

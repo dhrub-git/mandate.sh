@@ -12,6 +12,7 @@ interface PolicyAgentContextValue {
   sendMessage: UseChatHelpers<ChatMessageAI>["sendMessage"];
   setMessages: UseChatHelpers<ChatMessageAI>["setMessages"];
   resumeStream: UseChatHelpers<ChatMessageAI>["resumeStream"];
+  setNewPolicy: (policy: Policy) => void;
 }
 
 export interface PolicyUpdateProps {
@@ -27,6 +28,7 @@ interface PolicyAgentProviderProps {
   threadId: string;
   version?: number;
   setPolicyUpdate: (update: PolicyUpdateProps) => void;
+  setNewPolicy: (policy: Policy) => void;
 }
 
 const PolicyAgentContext = createContext<PolicyAgentContextValue | undefined>(
@@ -38,6 +40,7 @@ export const PolicyAgentProvider = ({
   threadId,
   version,
   setPolicyUpdate,
+  setNewPolicy,
 }: PolicyAgentProviderProps) => {
   const versionRef = useRef(version);
 
@@ -85,6 +88,7 @@ export const PolicyAgentProvider = ({
         sendMessage: sendMessage,
         setMessages: setMessages,
         resumeStream: resumeStream,
+        setNewPolicy: setNewPolicy,
       }}
     >
       {children}

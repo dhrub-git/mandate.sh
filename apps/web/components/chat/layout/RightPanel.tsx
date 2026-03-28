@@ -8,11 +8,27 @@ import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@repo/ui/button";
 import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
+import { PolicyStatus } from "@repo/database";
+
+const generatePolicyMessage = (updating: boolean, policyStatus: PolicyStatus | undefined): string => {
+  if (updating) {
+    return "Updating the policy...";
+  }
+  switch (policyStatus) {
+    case PolicyStatus.IN_REVIEW:
+      return "Policy is in review status.";
+    case PolicyStatus.APPROVED:
+      return "Policy has been approved.";
+    default:
+      return "Policy generation complete. Review the document on the left.";
+  }
+};
 
 export default function RightPanel(props: {
   companyProfile: CompanyProfile | undefined;
   status: WorkflowStatus;
   policies: string | undefined;
+  currentPolicyStatus: PolicyStatus | undefined;
   messages: Message[];
   input: string;
   setInput: (v: string) => void;
@@ -32,6 +48,7 @@ export default function RightPanel(props: {
     isStreaming,
     error,
     policies,
+    currentPolicyStatus,
   } = props;
   const [isUpdatingPolicy, setIsUpdatingPolicy] = useState(false);
   const {
@@ -93,13 +110,11 @@ export default function RightPanel(props: {
               <div className="flex items-center gap-4">
                 <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
                 <p className="text-sm font-medium text-green-900 dark:text-green-200">
-                  {!isUpdatingPolicy
-                    ? "Policy generation complete. Review the document on the left."
-                    : "Policy generation complete. Review the document on the left."}
+                  {generatePolicyMessage(isUpdatingPolicy, currentPolicyStatus)}
                 </p>
               </div>
 
-              {!isUpdatingPolicy && (
+              {(!isUpdatingPolicy || [PolicyStatus.DRAFT, PolicyStatus.REJECTED].includes(currentPolicyStatus as any)) && (
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm text-green-800 dark:text-green-300">
                     Want to refine or expand it further? Continue editing with

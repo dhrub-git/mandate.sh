@@ -26,6 +26,11 @@ const STATUS_STYLES: Record<
     className:
       "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-800",
   },
+  REJECTED: {
+    label: "Rejected",
+    className:
+      "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800",
+  },
 };
 
 interface StatusBadgeProps {

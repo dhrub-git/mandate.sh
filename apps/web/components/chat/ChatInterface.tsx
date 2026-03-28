@@ -18,7 +18,10 @@ import {
 import type { Policy } from "@repo/database";
 import { generatePolicyPDF } from "@/lib/downloadPolicy";
 import { ExecutiveSummaryModal } from "./modals/ExecutiveSummaryModel";
-import { generateExecutiveSummary, type SummaryOutput } from "@/actions/summary-actions";
+import {
+  generateExecutiveSummary,
+  type SummaryOutput,
+} from "@/actions/summary-actions";
 import { getPoliciesByThread } from "@/actions/actions";
 
 type ChatInterfaceProps = {
@@ -58,7 +61,7 @@ export function ChatInterface({
   //States for Summary Modal
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [summaryData, setSummaryData] = useState<SummaryOutput | null>(null);
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false); 
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -117,13 +120,13 @@ export function ChatInterface({
         setPolicyDocumentsState({
           current: policyState.current,
           versions: policyState.versions,
-        })
+        });
         setSelectedPolicyVersion(policyState.current?.version ?? null);
       } catch (error) {
         console.error("Failed to fetch or set policies:", error);
       }
-    }
-    if(initialPolicies){
+    };
+    if (initialPolicies) {
       setPolicyFromBackend();
     }
   }, [initialPolicies]);
@@ -325,7 +328,8 @@ export function ChatInterface({
     );
 
     // Normalize buffer → ArrayBuffer
-    const arrayBuffer = buffer instanceof Uint8Array ?(buffer.buffer as ArrayBuffer) : buffer;
+    const arrayBuffer =
+      buffer instanceof Uint8Array ? (buffer.buffer as ArrayBuffer) : buffer;
 
     const blob = new Blob([arrayBuffer], { type: "application/pdf" });
 
@@ -421,15 +425,28 @@ export function ChatInterface({
       setSummaryError(result.error);
     }
     setIsGeneratingSummary(false);
-
   };
 
   const handlecloseSummaryModal = () => {
     setShowSummaryModal(false);
   };
 
+  const setNewPolicy = (policy: Policy) => {
+    setPolicyDocumentsState((prev) => ({
+      current: policy,
+      versions: [prev.current!, ...prev.versions],
+    }));
+    setSelectedPolicyVersion(policy.version);
+  }
+
+
   return (
-    <PolicyAgentProvider threadId={threadId} setPolicyUpdate={setPolicyUpdate} version={selectedPolicyVersion ?? undefined}>
+    <PolicyAgentProvider
+      threadId={threadId}
+      setPolicyUpdate={setPolicyUpdate}
+      version={selectedPolicyVersion ?? undefined}
+      setNewPolicy={setNewPolicy}
+    >
       <ChatLayout
         left={
           <LeftPanel
@@ -465,10 +482,10 @@ export function ChatInterface({
             isSubmitting={isSubmitting}
             isStreaming={isStreaming}
             error={error}
+            currentPolicyStatus={PolicyDocumentsState.current?.status}
           />
         }
       />
     </PolicyAgentProvider>
   );
 }
-

@@ -17,6 +17,7 @@ import VersionDropdown from "../policy/VersionDropdown";
 import { StatusBadge } from "../policy/StatusBadge";
 import { PolicyVersionTimeline } from "../policy/PolicyVersionTimeline";
 import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
+import { PolicyActionButtons } from "../policy/ActionButton";
 
 interface PolicyDocuments {
   current: Policy | null;
@@ -116,16 +117,19 @@ export default function LeftPanel(props: {
           </div>
 
           {/* Actions row */}
-          {policies.current && (
+          {selectedPolicy && policies.current && (
             <div className="flex items-center justify-between gap-3 flex-wrap">
               {/* Left side (status + version) */}
               <div className="flex items-center gap-3">
-                <StatusBadge status={policies.current.status} />
-
+                <StatusBadge status={selectedPolicy.status} />
                 <VersionDropdown
                   versions={[policies.current, ...policies.versions]}
                   currentVersion={selectedPolicyVersion}
                   onSelectVersion={setSelectedPolicyVersion}
+                />
+                <PolicyActionButtons
+                  status={selectedPolicy.status}
+                  policyId={selectedPolicy.id}
                 />
               </div>
 
