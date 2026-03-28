@@ -93,18 +93,20 @@ export async function updatePolicyContent(
     version: number | null,
 ) {
     // 1. Get latest policy
-    const latestPolicy = await db.policy.findFirst({
-        where: {
-            threadId,
-            ...(version ? { version } : {}) // If version is provided, filter by it
-        },
-        orderBy: { createdAt: "desc" },
-    });
-    const currentVersion = await db.policy.count({
-        where: {
-            threadId,
-        },
-    });
+    const [latestPolicy, currentVersion] = await Promise.all([
+        db.policy.findFirst({
+            where: {
+                threadId,
+                ...(version ? { version } : {})
+            },
+            orderBy: { createdAt: "desc" },
+        }),
+        db.policy.count({
+            where: {
+                threadId,
+            },
+        }),
+    ]);
 
     if (!latestPolicy) {
         throw new Error("No existing policy found for this thread");
