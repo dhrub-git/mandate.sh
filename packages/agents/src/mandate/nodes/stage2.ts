@@ -46,8 +46,8 @@ const response = await modelWithTools.invoke(cleanMessages);
   // console.log("Tool Calls:", response.tool_calls);
 
   const aiMsg = response.content?.toString().trim() || "";
-  console.log("Content:", aiMsg);
-  console.log("============================\n");
+  // console.log("Content:", aiMsg);
+  // console.log("============================\n");
   if (aiMsg.includes("[STAGE2_COMPLETE]")) {
     console.log(`stage 2 Completed : ${(response.content, null, 2)}`);
     console.log("**********************************************************");
@@ -77,7 +77,7 @@ const response = await modelWithTools.invoke(cleanMessages);
       ${JSON.stringify(stage2Data.content, null, 2)}
       `);
 
-    console.log(`stage 2 data : \n${JSON.stringify(stage2Data, null, 2)}`);
+    // console.log(`stage 2 data : \n${JSON.stringify(stage2Data, null, 2)}`);
 
     return {
       messages: [response, stage3System, stage3Human],

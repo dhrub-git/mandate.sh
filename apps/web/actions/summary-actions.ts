@@ -84,6 +84,8 @@ export async function generateExecutiveSummary(
         schema: summaryOutputSchema,
       }),
     });
+    // Validate and return the result
+    console.log("Raw AI output:", result);
     return {
       success: true,
       data: result.output,

@@ -106,6 +106,7 @@ export async function policyGenerator(state: WorkflowState) {
     createPolicy(companyId, threadId, policyContent, sections),
     saveAdditionalData(companyId, threadId, state)
   ])
+  console.log("Policy saved to database");
 
   return {
     messages: [response],

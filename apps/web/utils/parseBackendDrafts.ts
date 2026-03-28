@@ -13,12 +13,12 @@ export const parseBackendDrafts = (drafts: Record<string, string>) => {
   };
 
   extract(
-    "purpose",
-    /^#{1,2}\s*(?:\d+\.\s*)?Purpose\s*&\s*Scope([\s\S]*?)(?=^#{1,2}\s|$)/im,
+     "purpose",
+  /^\s*#{1,3}\s*(?:\d+\.\s*)?Purpose\s*&\s*Scope([\s\S]*?)(?=^\s*#{1,3}\s|$)/im,
   );
   extract(
     "inventory",
-    /^#{1,2}\s*(?:\d+\.\s*)?(?:AI\s*System\s*)?Inventory([\s\S]*?)(?=^#{1,2}\s|$)/im,
+  /^\s*#{1,3}\s*(?:\d+\.\s*)?(?:AI\s*System\s*)?Inventory([\s\S]*?)(?=^\s*#{1,3}\s|$)/im,
   );
   extract(
     "governance",

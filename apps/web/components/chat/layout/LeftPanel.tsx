@@ -18,6 +18,7 @@ import { StatusBadge } from "../policy/StatusBadge";
 import { PolicyVersionTimeline } from "../policy/PolicyVersionTimeline";
 import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
 import { PolicyActionButtons } from "../policy/ActionButton";
+import VariantPanel from "../policyVariant/VariantPanel";
 
 interface PolicyDocuments {
   current: Policy | null;
@@ -195,7 +196,10 @@ export default function LeftPanel(props: {
         finalPolicy={selectedPolicy ? selectedPolicy.content : undefined}
         backendDrafts={backendDrafts}
       />
-
+{/* NEW: Integrate the Variant Panel */}
+{policies.current && (
+  <VariantPanel policy={policies.current} />
+)}
       {/* AGENT STRIP */}
       {!policies.current && (
         <AgentActivityStrip
