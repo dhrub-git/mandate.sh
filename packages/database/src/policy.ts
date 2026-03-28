@@ -1,8 +1,5 @@
-import { version } from "os";
 import { db } from ".";
 import { PolicyStatus } from "@prisma/client";
-import { updateMarkdownSectionAST } from "./utils/updateMarkdown";
-
 /**
  * Creates a new policy
  * @param companyId 

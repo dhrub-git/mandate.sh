@@ -8,16 +8,16 @@ import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@repo/ui/button";
 import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
-import { PolicyStatus } from "@repo/database";
+import type { PolicyStatus } from "@repo/database";
 
 const generatePolicyMessage = (updating: boolean, policyStatus: PolicyStatus | undefined): string => {
   if (updating) {
     return "Updating the policy...";
   }
   switch (policyStatus) {
-    case PolicyStatus.IN_REVIEW:
+    case "IN_REVIEW":
       return "Policy is in review status.";
-    case PolicyStatus.APPROVED:
+    case "APPROVED":
       return "Policy has been approved.";
     default:
       return "Policy generation complete. Review the document on the left.";
@@ -114,7 +114,7 @@ export default function RightPanel(props: {
                 </p>
               </div>
 
-              {(!isUpdatingPolicy || [PolicyStatus.DRAFT, PolicyStatus.REJECTED].includes(currentPolicyStatus as any)) && (
+              {(!isUpdatingPolicy || ["DRAFT", "REJECTED"].includes(currentPolicyStatus as any)) && (
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm text-green-800 dark:text-green-300">
                     Want to refine or expand it further? Continue editing with

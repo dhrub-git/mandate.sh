@@ -10,7 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@repo/ui/lib/utils";
-import { Policy, PolicyStatus } from "@repo/database";
+import type { Policy, PolicyStatus } from "@repo/database";
 
 const STATUS_STYLES: Record<PolicyStatus, string> = {
   DRAFT:

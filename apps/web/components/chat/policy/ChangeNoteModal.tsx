@@ -10,7 +10,7 @@ import {
 } from "@repo/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { PolicyStatus } from "@repo/database";
+import type { PolicyStatus } from "@repo/database";
 import { Textarea } from "@repo/ui/textarea";
 import { Button } from "@repo/ui/button";
 import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
