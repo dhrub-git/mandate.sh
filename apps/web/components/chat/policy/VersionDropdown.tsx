@@ -54,16 +54,15 @@ export default function VersionDropdown({
                   </span>
                 </div>
 
-                {/* Change Notes */}
-                {version.changeNote && (
-                  <div className="text-[11px] text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-700 rounded px-2 py-1 leading-snug line-clamp-2">
-                    {version.changeNote}
-                  </div>
-                )}
-
                 {/* Timestamp */}
                 <span className="text-[10px] text-gray-400">
-                  {new Date(version.createdAt).toLocaleString()}
+                  {new Date(version.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
                 </span>
               </div>
             </SelectItem>

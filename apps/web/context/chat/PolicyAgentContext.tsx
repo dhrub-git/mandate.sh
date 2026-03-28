@@ -1,6 +1,6 @@
 import { ChatMessageAI } from "@/utils/types";
 import { ChatStatus, DefaultChatTransport } from "ai";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useChat, UseChatHelpers } from "@ai-sdk/react";
 import { fetchWithErrorHandlers } from "@/utils/ai-utils";
 import { Policy } from "@repo/database";
@@ -12,7 +12,6 @@ interface PolicyAgentContextValue {
   sendMessage: UseChatHelpers<ChatMessageAI>["sendMessage"];
   setMessages: UseChatHelpers<ChatMessageAI>["setMessages"];
   resumeStream: UseChatHelpers<ChatMessageAI>["resumeStream"];
-  setVersion: (version: number) => void;
 }
 
 export interface PolicyUpdateProps {
@@ -26,6 +25,7 @@ export interface PolicyUpdateProps {
 interface PolicyAgentProviderProps {
   children: React.ReactNode;
   threadId: string;
+  version?: number;
   setPolicyUpdate: (update: PolicyUpdateProps) => void;
 }
 
@@ -36,9 +36,11 @@ const PolicyAgentContext = createContext<PolicyAgentContextValue | undefined>(
 export const PolicyAgentProvider = ({
   children,
   threadId,
+  version,
   setPolicyUpdate,
 }: PolicyAgentProviderProps) => {
-  const [policyVersion, setPolicyVersion] = useState<number | null>(null);
+  const versionRef = useRef(version);
+
   const { messages, status, sendMessage, setMessages, resumeStream, error } =
     useChat<ChatMessageAI>({
       experimental_throttle: 100,
@@ -49,7 +51,7 @@ export const PolicyAgentProvider = ({
           return {
             body: {
               threadId,
-              version: policyVersion,
+              version: versionRef.current,
               messages: request.messages,
               ...request.body,
             },
@@ -70,9 +72,9 @@ export const PolicyAgentProvider = ({
       },
     });
 
-  const setVersion = (version: number) => {
-    setPolicyVersion(version);
-  };
+  useEffect(() => {
+    versionRef.current = version;
+  }, [version]);
 
   return (
     <PolicyAgentContext.Provider
@@ -83,7 +85,6 @@ export const PolicyAgentProvider = ({
         sendMessage: sendMessage,
         setMessages: setMessages,
         resumeStream: resumeStream,
-        setVersion: setVersion,
       }}
     >
       {children}

@@ -403,6 +403,7 @@ export function ChatInterface({
     setSelectedPolicyVersion(update.updatedPolicy.version);
 
     // stream into SAME state
+    console.log("Starting to stream policy content update...");
     streamIntoPolicyState(fullContent);
   };
 
@@ -428,7 +429,7 @@ export function ChatInterface({
   };
 
   return (
-    <PolicyAgentProvider threadId={threadId} setPolicyUpdate={setPolicyUpdate}>
+    <PolicyAgentProvider threadId={threadId} setPolicyUpdate={setPolicyUpdate} version={selectedPolicyVersion ?? undefined}>
       <ChatLayout
         left={
           <LeftPanel

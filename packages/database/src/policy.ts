@@ -1,6 +1,7 @@
 import { version } from "os";
 import { db } from ".";
 import { PolicyStatus } from "@prisma/client";
+import { updateMarkdownSectionAST } from "./utils/updateMarkdown";
 
 /**
  * Creates a new policy
@@ -93,11 +94,16 @@ export async function updatePolicyContent(
 ) {
     // 1. Get latest policy
     const latestPolicy = await db.policy.findFirst({
-        where: { 
+        where: {
             threadId,
             ...(version ? { version } : {}) // If version is provided, filter by it
         },
         orderBy: { createdAt: "desc" },
+    });
+    const currentVersion = await db.policy.count({
+        where: {
+            threadId,
+        },
     });
 
     if (!latestPolicy) {
@@ -134,9 +140,11 @@ export async function updatePolicyContent(
     }
 
     // 4. Rebuild full markdown content
-    const rebuiltContent = updatedSections
-        .map((section) => `### ${section.title}\n\n${section.content}`)
-        .join("\n\n");
+    const rebuiltContent = await updateMarkdownSectionAST(
+        latestPolicy.content,
+        sectionId,
+        updatedSectionContent
+    );
 
     // 5. Create new version
     const updatedPolicy = await db.policy.create({
@@ -145,7 +153,7 @@ export async function updatePolicyContent(
             threadId: latestPolicy.threadId,
             content: rebuiltContent,
             sections: updatedSections,
-            version: latestPolicy.version + 1,
+            version: currentVersion + 1,
             changeNote,
             status: latestPolicy.status,
         },

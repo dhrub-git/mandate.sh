@@ -12,6 +12,7 @@ import { ChatMessageAI } from "@/utils/types";
 import { findSectionContextTool, rewriteForSectionTool } from "@/lib/tools/policy-tools";
 import { getCompanyInfo, getPoliciesByCompany } from "@repo/database";
 import { jsonToMarkdownTable } from "@/utils/contextualize-json";
+import { openai } from "@ai-sdk/openai";
 
 
 
@@ -88,7 +89,7 @@ Focus on executing updates efficiently and accurately.
 
 export async function POST(req: Request) {
   const { threadId, messages, version }: ChatRequestBody = await req.json();
-  console.log(`Processing Thread Id ${threadId}`);
+  console.log(`Processing Thread Id ${threadId} Version ${version ?? "current"}`);
 
   try {
     const draftPolicy = await getPoliciesByCompany(threadId);
@@ -101,7 +102,7 @@ export async function POST(req: Request) {
       originalMessages: messages,
       execute: async ({ writer: dataStream }) => {
         const result = streamText({
-          model: google('gemini-2.0-flash-lite'),
+          model: openai("gpt-5"),
           system: `${SYSTEM_PROMPT}
           ---
           Current Policy Content:

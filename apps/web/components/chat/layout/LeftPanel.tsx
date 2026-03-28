@@ -9,6 +9,7 @@ import { useMemo, useState } from "react";
 import VersionDropdown from "../policy/VersionDropdown";
 import { StatusBadge } from "../policy/StatusBadge";
 import { PolicyVersionTimeline } from "../policy/PolicyVersionTimeline";
+import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
 
 interface PolicyDocuments {
   current: Policy | null;

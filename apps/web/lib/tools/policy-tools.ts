@@ -2,9 +2,10 @@ import { ChatMessageAI } from "@/utils/types";
 import { generateText, Output, tool, UIMessageStreamWriter } from "ai";
 import z from "zod";
 import { aiGovernancePolicySpec } from "@repo/agents";
-import { google } from "@ai-sdk/google";
+import { openai } from '@ai-sdk/openai';
 import { updatePolicyContent } from "@repo/database";
 import { PolicyUpdateProps } from "@/context/chat/PolicyAgentContext";
+import { text } from "stream/consumers";
 
 const sectionIds = z
     .enum([
@@ -195,7 +196,7 @@ export const rewriteForSectionTool = (
                 );
 
                 const { output } = await generateText({
-                    model: google('gemini-2.0-flash-lite'),
+                    model: openai("gpt-5"),
                     prompt,
                     output: Output.object({
                         schema: z.object({
@@ -219,7 +220,10 @@ export const rewriteForSectionTool = (
                     } satisfies PolicyUpdateProps,
                 });
 
-                return output.text;
+                return {
+                    text: output.text,
+                    changeNotes: output.changeNotes,
+                };
             } catch (error) {
                 console.error("Error in rewriteForSectionTool:", error);
                 throw new Error("Failed to rewrite content for the policy section.");

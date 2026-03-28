@@ -124,7 +124,7 @@ export function PolicyVersionTimeline({
 
                     {/* change note */}
                     {policy.changeNote && (
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 text-wrap mt-0.5">
                         {policy.changeNote}
                       </p>
                     )}
@@ -135,6 +135,9 @@ export function PolicyVersionTimeline({
                       {policy.createdAt.toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
                       })}
                     </div>
                   </div>
