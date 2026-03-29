@@ -142,7 +142,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import type { Policy, PolicyVariant } from "@prisma/client";
+import type { Policy, PolicyVariant } from "@repo/database";
 import { generateVariant, getVariantsForPolicy } from "@/actions/policy-variants";
 import VariantViewer from "./VariantViewer";
 import { Loader2, Sparkles } from "lucide-react";
@@ -230,7 +230,7 @@ export default function VariantPanel({ policy }: VariantPanelProps) {
         ))}
       </div>
       {/* Content Area */}
-      <div className="p-4 min-h-[300px]">
+      <div className="p-4 min-h-75">
         {error && (
           <div className="text-red-600 mb-4 bg-red-50 border border-red-200 p-3 rounded-lg">
             {error}

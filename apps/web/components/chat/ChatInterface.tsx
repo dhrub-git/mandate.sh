@@ -126,10 +126,10 @@ export function ChatInterface({
         console.error("Failed to fetch or set policies:", error);
       }
     };
-    if (initialPolicies) {
+    if (policies && status === "completed") {
       setPolicyFromBackend();
     }
-  }, [initialPolicies]);
+  }, [policies, status]);
 
   function connectToStream(
     action: "start" | "resume",
