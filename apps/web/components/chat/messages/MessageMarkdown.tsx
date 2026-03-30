@@ -105,36 +105,61 @@ export const MarkdownResponse = memo(
         [&_table]:w-full
         [&_table]:text-left
         [&_table]:text-sm
-        [&_table]:text-gray-600
-        dark:[&_table]:text-gray-400
-        [&_table]:my-6
-        [&_table]:border
+        [&_table]:my-6[&_table]:border
         [&_table]:border-gray-200
         dark:[&_table]:border-zinc-700
         [&_table]:rounded-lg
         [&_table]:overflow-hidden
         [&_table]:block
         [&_table]:overflow-x-auto
+        /* ADDED: Cream background and forced dark text */
+        [&_table]:bg-[#fdfbf7]
+        dark:[&_table]:bg-[#fdfbf7]
+        [&_table]:text-gray-900
+        dark:[&_table]:text-gray-900
 
         /* TABLE HEAD */
-        [&_thead]:bg-gray-50
-        dark:[&_thead]:bg-zinc-800
-        [&_thead]:text-gray-900
-        dark:[&_thead]:text-gray-200
+        /* ADDED: Dark black header with white text */
+        [&_thead]:bg-[#18181b]
+        dark:[&_thead]:bg-[#18181b]
+        [&_thead]:text-white
+        dark:[&_thead]:text-white
         [&_thead]:font-semibold
 
         /* TABLE CELLS */
         [&_th]:px-4
         [&_th]:py-3
         [&_th]:border-b
-        [&_th]:border-gray-200
-        dark:[&_th]:border-zinc-700
+        [&_th]:border-zinc-800[&_th]:whitespace-nowrap
 
         [&_td]:px-4
         [&_td]:py-3
         [&_td]:border-b
-        [&_td]:border-gray-100
-        dark:[&_td]:border-zinc-800/50
+        [&_td]:border-gray-200
+        dark:[&_td]:border-gray-300
+
+         /* Inline Code */[&_code:not(pre_code)]:bg-gray-100
+        dark:[&_code:not(pre_code)]:bg-zinc-800
+        [&_code:not(pre_code)]:text-emerald-600
+        dark:[&_code:not(pre_code)]:text-emerald-400
+        [&_code:not(pre_code)]:px-1.5[&_code:not(pre_code)]:py-0.5
+        [&_code:not(pre_code)]:rounded-md
+        [&_code:not(pre_code)]:font-mono[&_code:not(pre_code)]:text-sm
+
+        /* Multi-line Preformatted Code blocks */
+        [&_pre]:my-6
+        [&_pre]:p-4
+        [&_pre]:rounded-lg[&_pre]:border
+        [&_pre]:border-gray-200
+        dark:[&_pre]:border-zinc-700
+        [&_pre]:overflow-x-auto
+        /* ADDED: Cream background and forced dark text */
+        [&_pre]:bg-[#fdfbf7]
+        dark:[&_pre]:bg-[#fdfbf7]
+        [&_pre]:text-gray-900
+        dark:[&_pre]:text-gray-900
+        [&_pre]:font-mono
+        [&_pre]:text-sm
 
         `,
         className

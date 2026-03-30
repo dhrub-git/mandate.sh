@@ -2,6 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
+import { MarkdownResponse } from "../messages/MessageMarkdown";
 
 type VariantViewerProps = {
   variant: {
@@ -38,7 +39,7 @@ export default function VariantViewer({ variant, policyCreatedAt, onRegenerate, 
       )}
 
    <div className="prose prose-sm dark:prose-invert max-w-none">
-        <ReactMarkdown>{variant.content}</ReactMarkdown>
+        <MarkdownResponse>{variant.content}</MarkdownResponse>
       </div>
     </div>
   );
