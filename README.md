@@ -1,135 +1,97 @@
-# Turborepo starter
+# Mandate
 
-This Turborepo starter is maintained by the Turborepo core team.
+Mandate is a Turbo monorepo for generating AI governance policies from a guided company onboarding flow. Users complete a multi-step questionnaire, the app stores that company profile in Postgres via Prisma, then a LangGraph workflow asks follow-up questions, performs web research with Exa when needed, and produces final policy markdown.
 
-## Using this example
+## Demo
 
-Run the following command:
+![Mandate Demo](screenshots/mandate-demo.gif)
 
-```sh
-npx create-turbo@latest
+*Complete walkthrough: Homepage → Company Onboarding → AI-Powered Q&A → Policy Generation*
+
+## How It Works
+
+The active product flow lives in `apps/web`:
+
+1. `/` routes users to onboarding.
+2. `/onboarding` collects company details such as industry, size, operating regions, governance structure, and AI role.
+3. A server action creates a `Company` record and starts a workflow thread.
+4. `/dashboard` resumes that thread through streaming SSE events from `/api/mandate/stream`.
+5. The graph runs stage 2, stage 3, stage 4, and `policy_generator`, pausing on LangGraph interrupts until enough information is available to generate final policies.
+
+Intermediate draft sections are surfaced in the dashboard while the workflow is still running.
+
+## Workspace Layout
+
+- `apps/web`: Next.js App Router frontend, server actions, API routes, prompt assets
+- `packages/agents`: LangGraph workflow, stage nodes, routers, model configuration, Exa search tool
+- `packages/database`: Prisma schema, enums, database client
+- `packages/ui`: shared React UI primitives
+- `packages/eslint-config`, `packages/typescript-config`: shared tooling config
+
+The main workflow code is under `packages/agents/src/mandate`.
+
+## Prerequisites
+
+- Node.js `>=18`
+- npm `10.x`
+- PostgreSQL database reachable through `DATABASE_URL`
+
+Required environment variables:
+
+```bash
+DATABASE_URL=postgresql://...
+EXASEARCH_API_KEY=...
+GEMINI_API_KEY=...
+OPENAI_API_KEY1=...
 ```
 
-## What's inside?
+## Local Development
 
-This Turborepo includes the following packages/apps:
+Install dependencies:
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+npm install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Generate Prisma client and sync the schema:
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+npm --workspace @repo/database run db:generate
+npm --workspace @repo/database run db:push
 ```
 
-### Develop
+Start the workspace:
 
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+```bash
+npm run dev
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+To run only the web app:
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```bash
+npm --workspace web run dev
 ```
 
-### Remote Caching
+The app is served at `http://localhost:3000`.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## Common Commands
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+npm run build
+npm run lint
+npm run check-types
+npm run format
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Database helpers:
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+```bash
+npm --workspace @repo/database run db:studio
 ```
 
-## Useful Links
+## Notes for Contributors
 
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- The live workflow uses `/api/mandate/stream`; `apps/web/app/api/chat/route.ts` appears to be older scaffold code.
+- `packages/agents/src/graph.ts` is also scaffolded and not the main mandate graph.
+- Prompt files used by the workflow are stored in `apps/web/public/prompts`.
+- There is no committed automated test suite yet, so current verification is linting, type-checking, and manual end-to-end validation through onboarding and dashboard resume flows.
