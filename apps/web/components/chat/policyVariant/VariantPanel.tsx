@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { Policy, PolicyVariant } from "@prisma/client"; 
-import { generateVariant, getVariantsForPolicy } from "@/actions/policy-variants";
+import { generateVariant, getVariantsForPolicy , getVariantsForThread } from "@/actions/policy-variants";
 import VariantViewer from "./VariantViewer";
 import { Loader2 } from "lucide-react"; // Nice loading spinner
 import {generateVariantPDF} from "@/lib/downloadVariant";
@@ -33,16 +33,19 @@ export default function VariantPanel({ policy, companyProfile }: VariantPanelPro
   const[generating, setGenerating] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
+  const [variantsFromVersion, setVariantsFromVersion] = useState<number | null>(null);
 
   const isAnyGenerating = Object.values(generating).some(Boolean);
   const isLockedStatus = policy.status === "IN_REVIEW" || policy.status === "PUBLISHED";
 
   useEffect(() => {
-    getVariantsForPolicy(policy.id).then((data) => {
-      const map = data.reduce((acc, curr) => ({ ...acc, [curr.variantType]: curr }), {});
+    getVariantsForThread(policy.threadId).then((data) => {
+      const map = data.variants.reduce((acc, curr) => ({ ...acc, [curr.variantType]: curr }), {});
       setVariants(map);
+      setVariantsFromVersion(data.variantsFromVersion);
     });
-  }, [policy.id]);
+    console.log("Fetching variants for policy ID:", policy.id);
+  }, [policy.threadId]);
 
   const handleGenerate = async (type: VariantType) => {
     setError(null);
@@ -97,7 +100,9 @@ export default function VariantPanel({ policy, companyProfile }: VariantPanelPro
   };
 
   const activeVariant = variants[activeTab];
-
+const isActiveVariantStale = activeVariant 
+  ? new Date(activeVariant.generatedAt) < new Date(policy.createdAt)
+  : false;
  return (
     // FIX: Removed "flex flex-col", now it will naturally size itself
     <div className="border border-gray-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-[#121212] shadow-sm overflow-hidden block">
@@ -167,7 +172,11 @@ export default function VariantPanel({ policy, companyProfile }: VariantPanelPro
             <div className="text-gray-800 dark:text-gray-200 text-sm">
               <VariantViewer 
                 variant={activeVariant} 
-                policyCreatedAt={policy.createdAt}
+                isStale={isActiveVariantStale}
+                // policyCreatedAt={policy.createdAt}
+                variantsFromVersion={variantsFromVersion}
+                currentPolicyVersion={policy.version}
+
                 onRegenerate={() => handleGenerate(activeTab)}
                 isGenerating={isAnyGenerating}
               />

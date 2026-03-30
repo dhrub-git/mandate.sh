@@ -86,3 +86,30 @@ export async function getVariantsForPolicy(policyId: string) {
     where: { policyId },
   });
 }
+
+
+export async function getVariantsForThread(threadId: string) {
+  // Get all policy IDs for this thread
+  const policies = await db.policy.findMany({
+    where: { threadId },
+    select: { id: true, version: true },
+    orderBy: { version: "desc" },
+  });
+  const policyIds = policies.map((p) => p.id);
+  if (policyIds.length === 0) return { variants: [], variantsFromVersion: null };
+  // Get all variants linked to any policy version in this thread
+  const variants = await db.policyVariant.findMany({
+    where: {
+      policyId: { in: policyIds },
+    },
+    include: {
+      policy: {
+        select: { version: true, id: true },
+      },
+    },
+  });
+  if (variants.length === 0) return { variants: [], variantsFromVersion: null };
+  // Find which version the variants belong to
+  const variantsFromVersion = variants[0]?.policy.version ?? null;
+  return { variants, variantsFromVersion };
+}
