@@ -5,6 +5,8 @@ import type { Policy, PolicyVariant } from "@prisma/client";
 import { generateVariant, getVariantsForPolicy } from "@/actions/policy-variants";
 import VariantViewer from "./VariantViewer";
 import { Loader2 } from "lucide-react"; // Nice loading spinner
+import {generateVariantPDF} from "@/lib/downloadVariant";
+import { set } from "date-fns";
 
 type VariantType = "EXECUTIVE_SUMMARY" | "COMPREHENSIVE_POLICY" | "VENDOR_REQUIREMENTS" | "CODING_STANDARDS";
 
@@ -17,13 +19,20 @@ const VARIANT_TABS: { id: VariantType; label: string; desc: string }[] =[
 
 type VariantPanelProps = {
   policy: Policy;
+  companyProfile?:{
+    name: string;
+    industry: string;
+    size: string;
+    countries: string;
+  }
 };
 
-export default function VariantPanel({ policy }: VariantPanelProps) {
+export default function VariantPanel({ policy, companyProfile }: VariantPanelProps) {
   const [variants, setVariants] = useState<Record<string, PolicyVariant>>({});
   const [activeTab, setActiveTab] = useState<VariantType>("EXECUTIVE_SUMMARY");
   const[generating, setGenerating] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
 
   const isAnyGenerating = Object.values(generating).some(Boolean);
   const isLockedStatus = policy.status === "IN_REVIEW" || policy.status === "PUBLISHED";
@@ -57,8 +66,34 @@ export default function VariantPanel({ policy }: VariantPanelProps) {
     }
   };
 
-  const downloadPdf = (variantId: string) => {
-    window.open(`/api/policies/variants/${variantId}/pdf`, "_blank");
+  const downloadPdf = async (variant:PolicyVariant) => {
+    if (!companyProfile) {
+      setError("Company profile is required to download PDF.");
+      return;
+    }
+    setIsDownloadingPDF(true);
+    setError(null);
+    try {
+      const buffer = await generateVariantPDF(companyProfile, variant);
+      // Normalize buffer → ArrayBuffer
+      const arrayBuffer =
+        buffer instanceof Uint8Array ? (buffer.buffer as ArrayBuffer) : buffer;
+      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const variantLabel = variant.variantType.replace(/_/g, "_");
+      a.download = `${companyProfile.name}_${variantLabel}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download PDF:", err);
+      setError("Failed to download PDF");
+    } finally {
+      setIsDownloadingPDF(false);
+    }
   };
 
   const activeVariant = variants[activeTab];
@@ -120,10 +155,11 @@ export default function VariantPanel({ policy }: VariantPanelProps) {
                 Regenerate
               </button>
               <button 
-                onClick={() => downloadPdf(activeVariant.id)}
-                className="px-3 py-1.5 text-xs font-medium border border-transparent bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded hover:bg-gray-800 dark:hover:bg-white transition-colors"
+                onClick={() => downloadPdf(activeVariant)}
+                disabled={isDownloadingPDF || !companyProfile}
+               className="px-3 py-1.5 text-xs font-medium border border-transparent bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded hover:bg-gray-800 dark:hover:bg-white transition-colors disabled:opacity-50"
               >
-                Download PDF
+                {isDownloadingPDF ? "Downloading..." : "Download PDF"}
               </button>
             </div>
             
