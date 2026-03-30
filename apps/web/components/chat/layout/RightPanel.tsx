@@ -19,6 +19,10 @@ const generatePolicyMessage = (updating: boolean, policyStatus: PolicyStatus | u
       return "Policy is in review status.";
     case "APPROVED":
       return "Policy has been approved.";
+    case "PUBLISHED":
+      return "Policy has been published.";
+    case "REJECTED":
+      return "Policy has been rejected. You can continue editing it with our AI agent.";
     default:
       return "Policy generation complete. Review the document on the left.";
   }
@@ -114,7 +118,7 @@ export default function RightPanel(props: {
                 </p>
               </div>
 
-              {(!isUpdatingPolicy || ["DRAFT", "REJECTED"].includes(currentPolicyStatus as any)) && (
+              {(!isUpdatingPolicy && ["DRAFT", "REJECTED"].includes(currentPolicyStatus as any)) && (
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm text-green-800 dark:text-green-300">
                     Want to refine or expand it further? Continue editing with
