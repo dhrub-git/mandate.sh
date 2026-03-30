@@ -16,10 +16,10 @@ import { useMemo, useState } from "react";
 import VersionDropdown from "../policy/VersionDropdown";
 import { StatusBadge } from "../policy/StatusBadge";
 import { PolicyVersionTimeline } from "../policy/PolicyVersionTimeline";
-import { usePolicyAgent } from "@/context/chat/PolicyAgentContext";
 import { PolicyActionButtons } from "../policy/ActionButton";
 import VariantPanel from "../policyVariant/VariantPanel";
 
+type MainTabType = "MASTER" | "VARIANTS";
 interface PolicyDocuments {
   current: Policy | null;
   versions: Policy[] | never[];
@@ -87,6 +87,8 @@ export default function LeftPanel(props: {
       policies.current
     );
   }, [policies, selectedPolicyVersion]);
+
+  const [activeMainTab, setActiveMainTab] = useState<MainTabType>("MASTER");
 
   return (
     <>
@@ -178,6 +180,35 @@ export default function LeftPanel(props: {
           )}
         </div>
       </div>
+     
+     
+      {/* MAIN TABS - Only show when final policy exists */}
+      {policies.current && (
+        <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0 print:hidden">
+          <div className="flex px-6">
+            <button
+              onClick={() => setActiveMainTab("MASTER")}
+              className={`px-4 py-2.5 whitespace-nowrap text-xs font-medium transition-colors ${
+                activeMainTab === "MASTER"
+                  ? "border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              }`}
+            >
+              Master Policy
+            </button>
+            <button
+              onClick={() => setActiveMainTab("VARIANTS")}
+              className={`px-4 py-2.5 whitespace-nowrap text-xs font-medium transition-colors ${
+                activeMainTab === "VARIANTS"
+                  ? "border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              }`}
+            >
+              Variant Policies
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* STAGE BAR */}
       {!policies.current && (
@@ -188,18 +219,46 @@ export default function LeftPanel(props: {
       )}
 
       {/* POLICY */}
-      <DraftPolicy
+      {/* <DraftPolicy
         companyProfile={companyProfile}
         activeStage={activeStage}
         stagesComplete={stagesComplete}
         questionCount={questionCount}
         finalPolicy={selectedPolicy ? selectedPolicy.content : undefined}
         backendDrafts={backendDrafts}
-      />
+      /> */}
 {/* NEW: Integrate the Variant Panel */}
-{policies.current && (
+{/* {policies.current && (
   <VariantPanel policy={policies.current} />
-)}
+)} */}
+
+{/* CONTENT - Based on active tab */}
+      {!policies.current ? (
+        // No final policy yet - show draft sections
+        <DraftPolicy
+          companyProfile={companyProfile}
+          activeStage={activeStage}
+          stagesComplete={stagesComplete}
+          questionCount={questionCount}
+          finalPolicy={undefined}
+          backendDrafts={backendDrafts}
+        />
+      ) : activeMainTab === "MASTER" ? (
+        // Master Policy tab - show final policy
+        <DraftPolicy
+          companyProfile={companyProfile}
+          activeStage={activeStage}
+          stagesComplete={stagesComplete}
+          questionCount={questionCount}
+          finalPolicy={selectedPolicy ? selectedPolicy.content : undefined}
+          backendDrafts={backendDrafts}
+        />
+      ) : (
+        // Variant Policies tab - show full VariantPanel component
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-50 dark:bg-zinc-950">
+          <VariantPanel policy={policies.current} />
+        </div>
+      )}
       {/* AGENT STRIP */}
       {!policies.current && (
         <AgentActivityStrip

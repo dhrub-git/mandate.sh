@@ -7,12 +7,14 @@ import { getSectionState } from "@/utils/getSectionState";
 import { MarkdownResponse } from "../messages/MessageMarkdown";
 import VariantPanel from "../policyVariant/VariantPanel";
 
+
 export function DraftPolicy({
   companyProfile,
   activeStage,
   stagesComplete,
   finalPolicy,
   backendDrafts,
+
 }: {
   companyProfile: CompanyProfile | undefined;
   activeStage: string | null;
