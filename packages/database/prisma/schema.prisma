@@ -42,7 +42,7 @@ model Policy {
   id         String       @id @default(cuid())
   companyId  String
   threadId   String
-  content    String
+  content    String       @db.Text
   sections   Json
   version    Int
   changeNote String?
@@ -54,6 +54,7 @@ model Policy {
   company  Company         @relation(fields: [companyId], references: [id])
   variants PolicyVariant[]
 
+  @@index([threadId])
   @@unique([threadId, version])
 }
 
