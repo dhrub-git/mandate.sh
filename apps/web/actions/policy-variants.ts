@@ -92,7 +92,7 @@ export async function getVariantsForThread(threadId: string) {
   // Get all policy IDs for this thread
   const policies = await db.policy.findMany({
     where: { threadId },
-    select: { id: true, version: true },
+    select: { id: true, version: true, status: true },
     orderBy: { version: "desc" },
   });
   const policyIds = policies.map((p) => p.id);
@@ -104,7 +104,7 @@ export async function getVariantsForThread(threadId: string) {
     },
     include: {
       policy: {
-        select: { version: true, id: true },
+        select: { version: true, id: true, status: true },
       },
     },
   });

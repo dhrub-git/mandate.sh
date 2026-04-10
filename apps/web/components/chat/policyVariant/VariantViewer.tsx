@@ -10,7 +10,9 @@ type VariantViewerProps = {
   };
   isStale: boolean;
   variantsFromVersion: number | null;
+  statusFromVersion: string | null;
   currentPolicyVersion: number;
+  currentPolicyStatus: string;
   onRegenerate: () => void;
   isGenerating: boolean;
 };
@@ -18,7 +20,9 @@ export default function VariantViewer({
   variant, 
   isStale,
   variantsFromVersion,
+  statusFromVersion,
   currentPolicyVersion,
+  currentPolicyStatus,
   onRegenerate, 
   isGenerating 
 }: VariantViewerProps) {
@@ -37,7 +41,7 @@ export default function VariantViewer({
             <p className="font-medium">Master Policy has been updated</p>
             {isFromOlderVersion && (
               <p className="text-sm mt-1">
-                This variant was generated from v{variantsFromVersion}. Current policy is v{currentPolicyVersion}.
+                This variant was generated from v{variantsFromVersion} {statusFromVersion}. Current policy is v{currentPolicyVersion} {currentPolicyStatus}.
               </p>
             )}
           </div>

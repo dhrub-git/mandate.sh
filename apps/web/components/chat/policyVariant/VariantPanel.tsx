@@ -175,7 +175,9 @@ const isActiveVariantStale = activeVariant
                 isStale={isActiveVariantStale}
                 // policyCreatedAt={policy.createdAt}
                 variantsFromVersion={variantsFromVersion}
+                statusFromVersion={activeVariant?.policy?.status}
                 currentPolicyVersion={policy.version}
+                currentPolicyStatus={policy.status}
 
                 onRegenerate={() => handleGenerate(activeTab)}
                 isGenerating={isAnyGenerating}
