@@ -9,9 +9,6 @@ import { interrupt } from "@langchain/langgraph";
 import { WorkflowState } from "../graph/state";
 import { STAGE2_SYSTEM_PROMPT, STAGE3_SYSTEM_PROMPT } from "../config/prompts";
 import { debugMessages } from "./deBug";
-import { parseStage2Output } from "../classifier/stage2Parser";
-import { classifyAISystems } from "../classifier/riskClassifier";
-import type { CompanyContext } from "../classifier/types";
 function sanitizeMessages(messages:any[]) {
   return messages.map((m)=>{
     if (typeof m.content === "string") return m;
@@ -49,37 +46,24 @@ const response = await modelWithTools.invoke(cleanMessages);
   // console.log("Tool Calls:", response.tool_calls);
 
   const aiMsg = response.content?.toString().trim() || "";
-  console.log("Content:", aiMsg);
-  console.log("============================\n");
+  // console.log("Content:", aiMsg);
+  // console.log("============================\n");
   if (aiMsg.includes("[STAGE2_COMPLETE]")) {
     console.log(`stage 2 Completed : ${(response.content, null, 2)}`);
     console.log("**********************************************************");
-
-    // --- Risk Classification ---
-    const parsedSystems = parseStage2Output(aiMsg, state.onboarding_data);
-    let companyContext: CompanyContext = { industry: "TECHNOLOGY", operatingRegions: [], aiRole: "BOTH" };
-    try {
-      const onboarding = JSON.parse(state.onboarding_data);
-      companyContext = {
-        industry: onboarding.industry || "TECHNOLOGY",
-        operatingRegions: onboarding.operatingRegions || [],
-        aiRole: onboarding.aiRole || "BOTH",
-        euInteraction: onboarding.euInteraction,
-      };
-    } catch (e) { console.error("Failed to parse onboarding data for risk classification:", e); }
-    const riskClassifications = classifyAISystems(parsedSystems, companyContext);
-    console.log("Risk Classifications:", JSON.stringify(riskClassifications.summary));
-
-    // --- Generate Draft 2 (with risk tiers) ---
-    const riskContext = riskClassifications.systems.map(s => `- ${s.systemName}: ${s.tier} (${s.article}) — ${s.reasoning}`).join("\n");
+    // --- NEW: Generate Draft 2 ---
     const draftResponse = await model1.invoke([
       new SystemMessage(
         "You are an expert AI Governance Policy Drafter. Output ONLY the markdown text for the sections requested without conversational filler.",
       ),
       new HumanMessage(
-        `Generate a professional Markdown draft for the "Purpose & Scope" and "AI System Inventory" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 2 Output:\n${aiMsg}\n\nRisk Classification Results:\n${riskContext}\n\nInclude a risk tier column in the AI System Inventory table.`,
+        `Generate a professional Markdown draft for the "Purpose & Scope" and "AI System Inventory" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 2 Output:\n${aiMsg}`,
       ),
     ]);
+    // ----------------------------
+    console.log("Draft Policy 2 : \n", draftResponse.content?.toString());
+
+    // append stage 3 system prompt and stage 2 data to message state.
 
     const stage2Data = response;
 
@@ -93,12 +77,13 @@ const response = await modelWithTools.invoke(cleanMessages);
       ${JSON.stringify(stage2Data.content, null, 2)}
       `);
 
+    // console.log(`stage 2 data : \n${JSON.stringify(stage2Data, null, 2)}`);
+
     return {
       messages: [response, stage3System, stage3Human],
       stage2_data: stage2Data,
       stage2_complete: true,
       draft_policy_2: draftResponse.content?.toString(),
-      risk_classifications: riskClassifications,
     };
   }
 

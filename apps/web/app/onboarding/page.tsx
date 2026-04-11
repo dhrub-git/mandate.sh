@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import { Button } from "@repo/ui/button";
 import { Input } from "@repo/ui/input";
-import { Select } from "@repo/ui/select";
+import {
+  SelectPrime as Select,
+} from "@repo/ui/select";
 import { SelectionCard } from "@repo/ui/selection-card";
 import { ProgressBar } from "@repo/ui/progress";
-import { submitCompanyProfile } from "../actions/onboarding";
-import { OnboardingData } from "../../lib/schemas";
+import { submitCompanyProfile } from "@/actions/onboarding";
+import { OnboardingData } from "@/lib/schemas";
 import {
   Industry,
   EmployeeCount,
@@ -128,7 +130,7 @@ export default function OnboardingWizard() {
       <nav className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <span className="text-2xl font-bold tracking-tight text-primary">
-            Mandate.sh
+            Mandate-Main
           </span>
           <div className="text-sm text-muted-foreground">
             Questions? (800) 936-0383
@@ -428,7 +430,7 @@ export default function OnboardingWizard() {
               variant="primary"
               onClick={handleNext}
               disabled={isPending}
-              className="min-w-[140px]"
+              className="min-w-35"
             >
               {isPending
                 ? "Saving..."

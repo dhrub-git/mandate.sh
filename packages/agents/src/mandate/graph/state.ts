@@ -21,6 +21,4 @@ draft_policy_2?: string;
 draft_policy_3?: string;
 draft_policy_4?: string;
 
-risk_classifications?: any;
-
 }

@@ -6,12 +6,12 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "check-types": "turbo run check-types",
+    "db:migrate": "turbo run db:migrate --filter=@repo/database",
+    "db:reset": "turbo run db:reset --filter=@repo/database"
   },
   "devDependencies": {
-    "@tailwindcss/oxide-darwin-arm64": "^4.2.0",
     "@types/pdf-parse": "^1.1.5",
-    "lightningcss-darwin-arm64": "^1.31.1",
     "prettier": "^3.7.4",
     "turbo": "^2.8.2",
     "typescript": "5.9.2"
@@ -37,9 +37,11 @@
     "@tailwindcss/typography": "^0.5.19",
     "ai": "^6.0.82",
     "csv-parser": "^3.2.0",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "html2pdf.js": "^0.14.0",
     "langchain": "^1.2.18",
+    "mysql2": "3.19.1",
     "next": "^16.1.6",
     "pdf-parse": "^2.4.5",
     "promptfoo": "^0.120.19",

@@ -39,7 +39,7 @@ const cleanMessages = sanitizeMessages(messages);
 const response = await modelWithTools.invoke(cleanMessages);
   const aiMsg = response.content?.toString().trim() || "";
 
-  console.log("Stage 3 AI:", aiMsg);
+  // console.log("Stage 3 AI:", aiMsg);
   const stage4System = new SystemMessage(STAGE4_SYSTEM_PROMPT);
   const stage3Data = response;
 
@@ -52,7 +52,7 @@ const response = await modelWithTools.invoke(cleanMessages);
 
                   stage 3 data:
                   ${JSON.stringify(stage3Data.content, null, 2)}
-                  `);
+                  `);``
 
   if (aiMsg.includes("[STAGE3_COMPLETE]")) {
     console.log(`stage 3 data : ${(stage3Data.content, null, 2)}`);
@@ -83,7 +83,7 @@ const response = await modelWithTools.invoke(cleanMessages);
       new HumanMessage(`Generate a professional Markdown draft for the "Governance Structure" and "Roles & Responsibilities" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage Output:\n${aiMsg}`)
     ]);
     // ----------------------------
-    console.log("Draft Policy 3 : \n", draftResponse.content?.toString());
+    console.log("Draft Policy 3 skipped : \n", draftResponse.content?.toString());
     return {
       messages: [response, stage4System, stage4Human],
       stage3_data: [response],

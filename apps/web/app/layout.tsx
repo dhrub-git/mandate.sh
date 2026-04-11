@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { Toaster as Toaster2 } from "sonner";
 import { Toaster } from "@repo/ui/toaster";
+
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -13,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Mandate.sh - AI Governance Platform",
+  title: "Mandate Main - AI Governance Platform",
   description: "Get personalized AI compliance guidance",
 };
 
@@ -27,6 +29,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {children}
         <Toaster />
+        <Toaster2 />
       </body>
     </html>
   );

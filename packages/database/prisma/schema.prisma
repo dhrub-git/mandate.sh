@@ -14,7 +14,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   companyId String?
-  company   Company? @relation(fields: [companyId], references: [id])
+
+  company Company? @relation(fields: [companyId], references: [id])
 }
 
 model Company {
@@ -29,9 +30,63 @@ model Company {
   certifications   String[]
   governance       GovernanceStructure
   aiRole           AIRole
+  additionalInfo   Json?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
-  users            User[]
+
+  users    User[]
+  policies Policy[]
+}
+
+model Policy {
+  id         String       @id @default(cuid())
+  companyId  String
+  threadId   String
+  content    String       @db.Text
+  sections   Json
+  version    Int
+  changeNote String?
+  parentId   String?
+  status     PolicyStatus @default(DRAFT)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  company  Company         @relation(fields: [companyId], references: [id])
+  parent   Policy?         @relation("PolicyVersioning", fields: [parentId], references: [id], onDelete: Cascade)
+  policies Policy[]        @relation("PolicyVersioning")
+  variants PolicyVariant[]
+
+  @@unique([threadId, version])
+  @@index([threadId])
+}
+
+model PolicyVariant {
+  id          String            @id @default(cuid())
+  policyId    String
+  variantType PolicyVariantType
+  content     String            @db.Text
+  sections    Json
+  generatedAt DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@unique([policyId, variantType])
+}
+
+enum PolicyVariantType {
+  EXECUTIVE_SUMMARY
+  COMPREHENSIVE_POLICY
+  VENDOR_REQUIREMENTS
+  CODING_STANDARDS
+}
+
+enum PolicyStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
 }
 
 enum Industry {

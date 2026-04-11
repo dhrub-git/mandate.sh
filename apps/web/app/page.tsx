@@ -10,7 +10,7 @@ import {
   Layers,
 } from "lucide-react";
 import { Bruno_Ace } from "next/font/google";
-import RainOnGlass from "./components/RainOnGlass";
+import RainOnGlass from "@/components/home/RainOnGlass";
 
 const brunoAce = Bruno_Ace({
   weight: "400",

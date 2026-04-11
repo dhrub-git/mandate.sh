@@ -45,11 +45,10 @@ const WorkflowStateAnnotation = Annotation.Root({
   stage3_complete: Annotation<boolean | undefined>(),
   stage4_complete: Annotation<boolean | undefined>(),
   policies: Annotation<string | undefined>(),
-
+  current_question: Annotation<string | undefined>(),
   draft_policy_2: Annotation<string | undefined>(),
   draft_policy_3: Annotation<string | undefined>(),
   draft_policy_4: Annotation<string | undefined>(),
-  risk_classifications: Annotation<any | undefined>(),
 });
 
 
@@ -85,7 +84,7 @@ export async function buildGraph() {
   builder.addEdge("web_search_3" as any, "stage_4" as any);
   builder.addEdge("web_search_4" as any, "policy_generator" as any);
 
-  builder.addEdge("policy_generator" as any, END);
+  // builder.addEdge("policy_generator" as any, END);
 
   
   // const checkpointer = new MemorySaver();
