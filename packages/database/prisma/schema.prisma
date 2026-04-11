@@ -52,10 +52,12 @@ model Policy {
   updatedAt  DateTime     @updatedAt
 
   company  Company         @relation(fields: [companyId], references: [id])
+  parent   Policy?         @relation("PolicyVersioning", fields: [parentId], references: [id], onDelete: Cascade)
+  policies Policy[]        @relation("PolicyVersioning")
   variants PolicyVariant[]
 
-  @@index([threadId])
   @@unique([threadId, version])
+  @@index([threadId])
 }
 
 model PolicyVariant {
