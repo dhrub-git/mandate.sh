@@ -102,3 +102,7 @@ npm --workspace @repo/database run db:studio
 - `packages/agents/src/graph.ts` is also scaffolded and not the main mandate graph.
 - Prompt files used by the workflow are stored in `apps/web/public/prompts`.
 - There is no committed automated test suite yet, so current verification is linting, type-checking, and manual end-to-end validation through onboarding and dashboard resume flows.
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE).
