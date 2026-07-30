@@ -1,6 +1,7 @@
 import {
   SystemMessage,
   HumanMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { model, model1 } from "../config/model";
 import { webSearch } from "../tools/webSearch";
@@ -13,31 +14,19 @@ import {
   companyContextFromOnboarding,
   formatRiskSummary,
 } from "../config/onboardingContext";
+import {
+  stageCompleteTool,
+  getStageCompleteCall,
+  isStageMarkedComplete,
+  nonCompleteToolCalls,
+} from "../tools/stageComplete";
+import { sanitizeMessages, contentToString } from "./messageUtils";
+import type { AISystemInput } from "../classifier/types";
 
-function sanitizeMessages(messages: any[]) {
-  return messages.map((m) => {
-    if (typeof m.content === "string") return m;
-
-    if (Array.isArray(m.content)) {
-      const text = m.content
-        .filter((b: any) => b.type === "text")
-        .map((b: any) => b.text ?? "")
-        .join("");
-
-      return {
-        ...m,
-        content: text,
-      };
-    }
-
-    return m;
-  });
-}
-
-export async function stage2(state: any) {
+export async function stage2(state: any): Promise<Record<string, unknown>> {
   console.log("Hello from Stage 2 Trial");
 
-  const modelWithTools = model.bindTools([webSearch]);
+  const modelWithTools = model.bindTools([webSearch, stageCompleteTool]);
   const messages = state.messages;
   console.log("Received Onboarding data: ", state.onboarding_data);
 
@@ -46,13 +35,19 @@ export async function stage2(state: any) {
 
   console.log("\n====== MODEL RESPONSE ======");
 
-  const aiMsg = response.content?.toString().trim() || "";
+  const aiMsg = contentToString(response.content).trim();
+  const completeCall = getStageCompleteCall(response, 2);
 
-  if (aiMsg.includes("[STAGE2_COMPLETE]")) {
+  if (isStageMarkedComplete(response, 2, ["[STAGE2_COMPLETE]"])) {
     console.log("stage 2 Completed");
 
     const onboarding = parseOnboardingData(state.onboarding_data);
-    const systems = parseStage2Output(aiMsg, state.onboarding_data);
+    const systemsFromTool = (completeCall?.args.systems ?? []) as AISystemInput[];
+    const systems =
+      systemsFromTool.length > 0
+        ? systemsFromTool
+        : parseStage2Output(aiMsg, state.onboarding_data);
+
     const risk_classifications = classifyAISystems(
       systems,
       companyContextFromOnboarding(onboarding),
@@ -65,22 +60,23 @@ export async function stage2(state: any) {
         "You are an expert AI Governance Policy Drafter. Output ONLY the markdown text for the sections requested without conversational filler.",
       ),
       new HumanMessage(
-        `Generate a professional Markdown draft for the "Purpose & Scope" and "AI System Inventory" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 2 Output:\n${aiMsg}\n\nEU AI Act Risk Classification (include risk tiers in the inventory):\n${riskSummary}`,
+        `Generate a professional Markdown draft for the "Purpose & Scope" and "AI System Inventory" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 2 Output:\n${aiMsg || completeCall?.args.summary || ""}\n\nEU AI Act Risk Classification (include risk tiers in the inventory):\n${riskSummary}`,
       ),
     ]);
     console.log("Draft Policy 2 : \n", draftResponse.content?.toString());
 
-    const stage2Data = response;
     const deployerList =
-      risk_classifications.systems
-        .filter((s) =>
-          /third.?party|deployer|vendor/i.test(
-            systems.find((sys) => sys.systemName === s.systemName)?.devSource ??
-              "",
-          ),
-        )
-        .map((s) => s.systemName)
-        .join(", ") || "None identified yet";
+      (completeCall?.args.deployerSystems?.length
+        ? completeCall.args.deployerSystems
+        : risk_classifications.systems
+            .filter((s) =>
+              /third.?party|deployer|vendor/i.test(
+                systems.find((sys) => sys.systemName === s.systemName)
+                  ?.devSource ?? "",
+              ),
+            )
+            .map((s) => s.systemName)
+      ).join(", ") || "None identified yet";
 
     const stage3System = new SystemMessage(
       buildStageSystemPrompt(3, state.onboarding_data, {
@@ -93,28 +89,51 @@ stage 1 data:
 ${state.onboarding_data}
 
 stage 2 data:
-${typeof stage2Data.content === "string" ? stage2Data.content : JSON.stringify(stage2Data.content, null, 2)}
+${aiMsg || completeCall?.args.summary || ""}
 
 EU AI Act risk classifications:
 ${JSON.stringify(risk_classifications, null, 2)}
 `);
 
+    const followUps = [];
+    if (completeCall?.id) {
+      followUps.push(
+        new ToolMessage({
+          content: JSON.stringify({
+            ok: true,
+            stage: 2,
+            systemsClassified: risk_classifications.summary.total,
+          }),
+          tool_call_id: completeCall.id,
+        }),
+      );
+    }
+
+    // Drop unresolved tool_calls from the AI message for history cleanliness when we handled completion
+    const completionResponse = completeCall
+      ? {
+          ...response,
+          tool_calls: nonCompleteToolCalls(response.tool_calls),
+        }
+      : response;
+
     return {
-      messages: [response, stage3System, stage3Human],
-      stage2_data: stage2Data,
+      messages: [completionResponse, ...followUps, stage3System, stage3Human],
+      stage2_data: response,
       stage2_complete: true,
       draft_policy_2: draftResponse.content?.toString(),
       risk_classifications,
     };
   }
 
-  if (response.tool_calls?.length) {
+  const searchCalls = nonCompleteToolCalls(response.tool_calls);
+  if (searchCalls.length) {
     return {
-      messages: [response],
+      messages: [{ ...response, tool_calls: searchCalls }],
     };
   }
 
-  const userInput = interrupt(aiMsg);
+  const userInput = interrupt(aiMsg || "Please continue with the inventory.");
 
   return {
     messages: [response, new HumanMessage(userInput)],

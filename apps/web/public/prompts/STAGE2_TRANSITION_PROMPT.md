@@ -127,20 +127,13 @@ Conduct the Stage 2 Per-System Inventory by asking the following questions (Q11â
 
 ## Handoff Signal
 
-When all systems are inventoried, output `[STAGE2_COMPLETE]` followed by a fenced JSON block in this exact shape (required for automated risk classification):
+When all systems are inventoried, call the **`stage_complete`** tool with:
 
-```json
-{
-  "systems": [
-    {
-      "systemName": "string (Q11)",
-      "devSource": "In-house | Third-party | Third-party with substantial modifications | Open-source we adapted (Q12)",
-      "purpose": "short purpose / function description",
-      "functionCategories": ["Chatbot/virtual assistant", "Data analysis"]
-    }
-  ],
-  "deployerSystems": ["systemName", "..."]
-}
-```
+- `stage`: `2`
+- `summary`: brief inventory summary
+- `systems`: array of `{ systemName, devSource, purpose, functionCategories }` for every inventoried system
+- `deployerSystems`: system names that are third-party / deployer-based
 
-Include every inventoried system. Prefer the function category labels from Q15 exactly as listed above so risk tiering works.
+Prefer function category labels from Q15 exactly as listed above so risk tiering works.
+
+Legacy fallback (only if you cannot call tools): output `[STAGE2_COMPLETE]` followed by the same JSON in a fenced block.

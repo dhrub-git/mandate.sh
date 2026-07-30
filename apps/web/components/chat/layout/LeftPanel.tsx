@@ -18,6 +18,8 @@ import { StatusBadge } from "../policy/StatusBadge";
 import { PolicyVersionTimeline } from "../policy/PolicyVersionTimeline";
 import { PolicyActionButtons } from "../policy/ActionButton";
 import VariantPanel from "../policyVariant/VariantPanel";
+import RiskClassificationPanel from "../policy/RiskClassificationPanel";
+import type { MandateClassificationResult } from "@repo/agents";
 
 type MainTabType = "MASTER" | "VARIANTS";
 interface PolicyDocuments {
@@ -35,6 +37,7 @@ export default function LeftPanel(props: {
   questionCount: number;
 
   backendDrafts: Record<string, string>;
+  riskClassifications?: MandateClassificationResult | null;
 
   liveEvents: any[];
   currentNode: string | null;
@@ -58,6 +61,7 @@ export default function LeftPanel(props: {
     stagesComplete,
     questionCount,
     backendDrafts,
+    riskClassifications,
     liveEvents,
     currentNode,
     streamingText,
@@ -218,21 +222,11 @@ export default function LeftPanel(props: {
         />
       )}
 
-      {/* POLICY */}
-      {/* <DraftPolicy
-        companyProfile={companyProfile}
-        activeStage={activeStage}
-        stagesComplete={stagesComplete}
-        questionCount={questionCount}
-        finalPolicy={selectedPolicy ? selectedPolicy.content : undefined}
-        backendDrafts={backendDrafts}
-      /> */}
-{/* NEW: Integrate the Variant Panel */}
-{/* {policies.current && (
-  <VariantPanel policy={policies.current} />
-)} */}
+      {riskClassifications && riskClassifications.systems.length > 0 && (
+        <RiskClassificationPanel classifications={riskClassifications} />
+      )}
 
-{/* CONTENT - Based on active tab */}
+      {/* CONTENT - Based on active tab */}
       {!policies.current ? (
         // No final policy yet - show draft sections
         <DraftPolicy

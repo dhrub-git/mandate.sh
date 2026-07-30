@@ -88,12 +88,14 @@ export async function updatePolicy(
             );
         }
 
-        // 3. Get current version count (inside transaction)
-        const currentVersionNumber = await tx.policy.count({
+        // 3. Get next version from max (race-safe vs concurrent count)
+        const versionAgg = await tx.policy.aggregate({
             where: {
                 threadId: existingPolicy.threadId,
             },
+            _max: { version: true },
         });
+        const nextVersion = (versionAgg._max.version ?? 0) + 1;
 
         // 4. Create new version
         const policy = await tx.policy.create({
@@ -104,7 +106,7 @@ export async function updatePolicy(
                 sections: existingPolicy.sections as PolicySection[],
                 status,
                 changeNote,
-                version: currentVersionNumber + 1,
+                version: nextVersion,
                 parentId: existingPolicy.id,
             },
         });
@@ -161,10 +163,12 @@ export async function updatePolicyContent(
       throw new Error("No existing policy found for this thread");
     }
 
-    // 2. Count versions safely inside transaction
-    const currentVersion = await tx.policy.count({
+    // 2. Next version from max (safer than count)
+    const versionAgg = await tx.policy.aggregate({
       where: { threadId },
+      _max: { version: true },
     });
+    const nextVersion = (versionAgg._max.version ?? 0) + 1;
 
     // 3. Parse sections
     const updatedSections = parseSections(updatedContent);
@@ -176,7 +180,7 @@ export async function updatePolicyContent(
         threadId: latestPolicy.threadId,
         content: updatedContent,
         sections: updatedSections,
-        version: currentVersion + 1,
+        version: nextVersion,
         changeNote,
         status: latestPolicy.status,
         parentId: latestPolicy.id,

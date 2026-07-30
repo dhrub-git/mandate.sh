@@ -160,4 +160,6 @@ Cross-reference with Q20 (affected populations) and Q22 (potential consequences)
 
 ## Handoff Signal
 
-When all deployer systems are processed, output a structured JSON block tagged `[STAGE3_COMPLETE]` with all Q26–Q28 answers per system and a list of flagged compliance gaps for Stage 4 context.
+When all deployer systems are processed, call the **`stage_complete`** tool with `stage: 3`, a `summary`, and optionally `providerOnlySkip: true` if this stage was skipped for provider-only companies.
+
+Legacy fallback: output a structured JSON block tagged `[STAGE3_COMPLETE]` (or `[STAGE3_SKIPPED — PROVIDER ONLY]`) with all Q26–Q28 answers per system and flagged compliance gaps for Stage 4.

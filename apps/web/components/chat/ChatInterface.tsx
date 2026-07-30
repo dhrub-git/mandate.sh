@@ -23,6 +23,7 @@ import {
   type SummaryOutput,
 } from "@/actions/summary-actions";
 import { getPoliciesByThread } from "@/actions/actions";
+import type { MandateClassificationResult } from "@repo/agents";
 
 type ChatInterfaceProps = {
   threadId: string;
@@ -35,6 +36,7 @@ type ChatInterfaceProps = {
   initialDrafts?: Record<string, string>;
   initialStagesComplete?: string[];
   initialActiveStage?: string | null;
+  initialRiskClassifications?: MandateClassificationResult | null;
 };
 
 // ─── ChatInterface ────────────────────────────────────────────────────────────
@@ -49,6 +51,7 @@ export function ChatInterface({
   initialDrafts = {},
   initialStagesComplete = [],
   initialActiveStage = null,
+  initialRiskClassifications = null,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -81,6 +84,8 @@ export function ChatInterface({
   const [questionCount, setQuestionCount] = useState(initialQuestion ? 1 : 0);
   const [backendDrafts, setBackendDrafts] =
     useState<Record<string, string>>(initialDrafts);
+  const [riskClassifications, setRiskClassifications] =
+    useState<MandateClassificationResult | null>(initialRiskClassifications);
   const [PolicyDocumentsState, setPolicyDocumentsState] = useState<{
     current: Policy | null;
     versions: Policy[];
@@ -203,6 +208,11 @@ export function ChatInterface({
             if (prev[key] === val) return prev;
             return { ...prev, [key]: val };
           });
+        } else if (key === "risk_classifications" && val && typeof val === "object") {
+          const risk = val as MandateClassificationResult;
+          if (Array.isArray(risk.systems)) {
+            setRiskClassifications(risk);
+          }
         } else if (typeof val === "object") {
           extractDraftsDeep(val);
         }
@@ -457,6 +467,7 @@ export function ChatInterface({
             stagesComplete={stagesComplete}
             questionCount={questionCount}
             backendDrafts={backendDrafts}
+            riskClassifications={riskClassifications}
             liveEvents={liveEvents}
             currentNode={currentNode}
             streamingText={streamingText}

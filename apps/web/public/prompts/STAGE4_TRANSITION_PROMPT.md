@@ -238,4 +238,6 @@ POLICY DOCUMENTS NOW GENERATABLE:
 
 ## Handoff Signal
 
-Output `[STAGE4_COMPLETE]` with full structured JSON of all 32 question responses + compliance gap registry.
+When Stage 4 is finished, call the **`stage_complete`** tool with `stage: 4` and a `summary` of regulations / risk findings.
+
+Legacy fallback: output `[STAGE4_COMPLETE]` with full structured JSON of question responses + compliance gap registry.

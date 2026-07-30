@@ -1,7 +1,10 @@
 export function stage4Router(state: any) {
   const lastMsg = state.messages[state.messages.length - 1];
+  const toolCalls = (lastMsg?.tool_calls ?? []).filter(
+    (t: { name: string }) => t.name !== "stage_complete",
+  );
 
-  if (lastMsg?.tool_calls?.length) {
+  if (toolCalls.length) {
     return "web_search_3";
   }
 
