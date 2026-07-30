@@ -4,14 +4,14 @@ import {
 } from "@repo/agents";
 import { NextRequest } from "next/server";
 const NODE_LABELS: Record<string, string> = {
-  stage_2: "AI Inventory Analysis",
-  stage_3: "Deployer Essentials",
-  stage_4: "Governance Essentials",
+  stage_2: "AI Inventory",
+  stage_3: "Governance Essentials",
+  stage_4: "Risk & Regulations",
   policy_generator: "Policy Generation",
-  web_search_1: "Regulatory Web Search",
-  web_search_2: "Competitive Web Search",
-  web_search_3: "Best Practice Web Search",
-  web_search_4: "Impact Web Search",
+  web_search_1: "Company Research",
+  web_search_2: "Governance Research",
+  web_search_3: "Regulatory Research",
+  web_search_4: "Policy Research",
 };
 const TRACKED_NODES = new Set([
   "stage_2",
@@ -76,14 +76,19 @@ export async function POST(req: NextRequest) {
               label: NODE_LABELS[name] ?? name,
             };
             // Inject draft policies into the SSE payload so the UI can grab them!
-            if (output?.draft_policy_2){
-              console.log("Draft Policy 2 found in output:", output.draft_policy_2);
+            if (output?.draft_policy_2) {
+              console.log(
+                "Draft Policy 2 found in output:",
+                output.draft_policy_2,
+              );
               payload.draft_policy_2 = output.draft_policy_2;
             }
             if (output?.draft_policy_3)
               payload.draft_policy_3 = output.draft_policy_3;
             if (output?.draft_policy_4)
               payload.draft_policy_4 = output.draft_policy_4;
+            if (output?.risk_classifications)
+              payload.risk_classifications = output.risk_classifications;
             send("node_complete", payload);
           }
           // --- LLM token streaming ---

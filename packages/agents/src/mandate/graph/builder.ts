@@ -49,6 +49,7 @@ const WorkflowStateAnnotation = Annotation.Root({
   draft_policy_2: Annotation<string | undefined>(),
   draft_policy_3: Annotation<string | undefined>(),
   draft_policy_4: Annotation<string | undefined>(),
+  risk_classifications: Annotation<any | undefined>(),
 });
 
 

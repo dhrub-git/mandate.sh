@@ -1,4 +1,5 @@
 import { BaseMessage } from "@langchain/core/messages";
+import type { ClassificationResult } from "../classifier/types";
 
 export interface WorkflowState {
   thread_id: string;
@@ -15,10 +16,12 @@ export interface WorkflowState {
   stage4_complete?: boolean;
 
   policies?: string;
-  current_question?:string;
+  current_question?: string;
 
-draft_policy_2?: string;
-draft_policy_3?: string;
-draft_policy_4?: string;
+  draft_policy_2?: string;
+  draft_policy_3?: string;
+  draft_policy_4?: string;
 
+  /** EU AI Act risk classification produced after Stage 2 inventory. */
+  risk_classifications?: ClassificationResult | null;
 }

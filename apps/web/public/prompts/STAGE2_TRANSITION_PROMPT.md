@@ -127,4 +127,20 @@ Conduct the Stage 2 Per-System Inventory by asking the following questions (Q11â
 
 ## Handoff Signal
 
-When all systems are inventoried, output a structured JSON block internally tagged `[STAGE2_COMPLETE]` with all Q11â€“Q25 answers per system, plus a list of which systems are deployer-based (for Stage 3 routing).
+When all systems are inventoried, output `[STAGE2_COMPLETE]` followed by a fenced JSON block in this exact shape (required for automated risk classification):
+
+```json
+{
+  "systems": [
+    {
+      "systemName": "string (Q11)",
+      "devSource": "In-house | Third-party | Third-party with substantial modifications | Open-source we adapted (Q12)",
+      "purpose": "short purpose / function description",
+      "functionCategories": ["Chatbot/virtual assistant", "Data analysis"]
+    }
+  ],
+  "deployerSystems": ["systemName", "..."]
+}
+```
+
+Include every inventoried system. Prefer the function category labels from Q15 exactly as listed above so risk tiering works.

@@ -21,38 +21,110 @@ export function parseStage2Output(
 }
 
 function tryParseJson(message: string): AISystemInput[] {
-  // Look for JSON array or object blocks in the message
-  const jsonPatterns = [
-    /\[[\s\S]*?\{[\s\S]*?"systemName"[\s\S]*?\}[\s\S]*?\]/,
-    /\[[\s\S]*?\{[\s\S]*?"system_name"[\s\S]*?\}[\s\S]*?\]/,
-    /\{[\s\S]*?"systems"[\s\S]*?:[\s\S]*?\[[\s\S]*?\][\s\S]*?\}/,
-  ];
+  // Strip markdown fences so raw JSON is easier to find
+  const cleaned = message.replace(/```(?:json)?\s*([\s\S]*?)```/gi, "$1");
 
-  for (const pattern of jsonPatterns) {
-    const match = message.match(pattern);
-    if (!match) continue;
+  const candidates: string[] = [];
 
+  // Prefer an object with a systems array
+  const systemsObj = cleaned.match(
+    /\{[\s\S]*"systems"\s*:\s*\[[\s\S]*\][\s\S]*\}/,
+  );
+  if (systemsObj) candidates.push(systemsObj[0]);
+
+  // Or a bare array of system objects
+  const arrayMatch = cleaned.match(
+    /\[[\s\S]*(?:"systemName"|"system_name"|"Q11")[\s\S]*\]/,
+  );
+  if (arrayMatch) candidates.push(arrayMatch[0]);
+
+  for (const candidate of candidates) {
     try {
-      let parsed = JSON.parse(match[0]);
-      if (parsed.systems) parsed = parsed.systems;
+      // Truncate to balanced JSON if regex over-captured trailing prose
+      const balanced = extractBalancedJson(candidate);
+      let parsed = JSON.parse(balanced);
+      if (parsed?.systems) parsed = parsed.systems;
       if (!Array.isArray(parsed)) parsed = [parsed];
 
-      return parsed
-        .filter((s: Record<string, unknown>) => s.systemName || s.system_name || s.name)
-        .map((s: Record<string, unknown>) => ({
-          systemName: String(s.systemName || s.system_name || s.name || "Unknown"),
-          devSource: String(s.devSource || s.dev_source || s.source || "Unknown"),
-          purpose: String(s.purpose || s.description || s.use || ""),
-          functionCategories: Array.isArray(s.functionCategories || s.function_categories || s.categories)
-            ? (s.functionCategories || s.function_categories || s.categories) as string[]
-            : [],
-        }));
+      const mapped = parsed
+        .filter(
+          (s: Record<string, unknown>) =>
+            s &&
+            (s.systemName || s.system_name || s.name || s.Q11),
+        )
+        .map((s: Record<string, unknown>) => {
+          const categories =
+            s.functionCategories ||
+            s.function_categories ||
+            s.categories ||
+            s.Q15;
+          return {
+            systemName: String(
+              s.systemName || s.system_name || s.name || s.Q11 || "Unknown",
+            ),
+            devSource: String(
+              s.devSource ||
+                s.dev_source ||
+                s.source ||
+                s.Q12 ||
+                "Unknown",
+            ),
+            purpose: String(
+              s.purpose || s.description || s.use || s.Q14 || s.Q11b || "",
+            ),
+            functionCategories: Array.isArray(categories)
+              ? (categories as string[])
+              : typeof categories === "string"
+                ? categories
+                    .split(/[,;]/)
+                    .map((c) => c.trim())
+                    .filter(Boolean)
+                : [],
+          };
+        });
+
+      if (mapped.length > 0) return mapped;
     } catch {
       continue;
     }
   }
 
   return [];
+}
+
+/** Return the longest prefix of `text` that is balanced `{...}` or `[...]`. */
+function extractBalancedJson(text: string): string {
+  const start = text.search(/[\{\[]/);
+  if (start < 0) return text;
+  const open = text[start]!;
+  const close = open === "{" ? "}" : "]";
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i]!;
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === open) depth++;
+    if (ch === close) {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return text.slice(start);
 }
 
 function tryParseRegex(message: string): AISystemInput[] {

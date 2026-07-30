@@ -1,12 +1,9 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { Command, isInterrupted, INTERRUPT } from "@langchain/langgraph";
 import { buildGraph } from "./builder";
-import { STAGE2_SYSTEM_PROMPT } from "../config/prompts";
+import { buildStageSystemPrompt } from "../config/prompts";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
-let graphPromise:ReturnType<typeof buildGraph> | null = null;
+let graphPromise: ReturnType<typeof buildGraph> | null = null;
 function getGraph() {
   if (!graphPromise) {
     graphPromise = buildGraph();
@@ -14,15 +11,22 @@ function getGraph() {
   return graphPromise;
 }
 
-// 🔑 Create graph with checkpointer (REQUIRED for interrupts)
-// const graph = buildGraph() ;
+function buildInitialMessages(onboardingData: unknown) {
+  return [
+    new SystemMessage(buildStageSystemPrompt(2, onboardingData)),
+    new HumanMessage(
+      `Stage 1 : Data:\n${typeof onboardingData === "string" ? onboardingData : JSON.stringify(onboardingData, null, 2)}`,
+    ),
+  ];
+}
 
 /**
  * Start a new workflow
  */
 export async function startWorkflow(threadId: string, input: any) {
   const graph = await getGraph();
-   
+  const onboardingData = input?.onboarding_data ?? input;
+
   const result = await graph.invoke(
     {
       ...input,
@@ -30,16 +34,12 @@ export async function startWorkflow(threadId: string, input: any) {
       stage2_data: [],
       stage3_data: [],
       stage4_data: [],
-      messages:  [
-    new SystemMessage(STAGE2_SYSTEM_PROMPT),
-    new HumanMessage(
-        `Stage 1 : Data:\n${JSON.stringify(input,null,2)}`
-      )
-  ],
+      risk_classifications: null,
+      messages: buildInitialMessages(onboardingData),
     },
     {
       configurable: { thread_id: threadId },
-    }
+    },
   );
   return formatGraphResponse(result);
 }
@@ -47,43 +47,44 @@ export async function startWorkflow(threadId: string, input: any) {
 /**
  * Resume after interrupt
  */
-export async function resumeWorkflow(
-  threadId: string,
-  userInput: string
-) {
+export async function resumeWorkflow(threadId: string, userInput: string) {
   const graph = await getGraph();
-  const result = await graph.invoke(
-    new Command({ resume: userInput }),  
-    {
-      configurable: { thread_id: threadId },
-    }
-  );
+  const result = await graph.invoke(new Command({ resume: userInput }), {
+    configurable: { thread_id: threadId },
+  });
 
   return formatGraphResponse(result);
 }
 
-
-export async function* streamWorkflowEvents(threadId: string,action: "start" | "resume", input: any):AsyncGenerator<any>{
+export async function* streamWorkflowEvents(
+  threadId: string,
+  action: "start" | "resume",
+  input: any,
+): AsyncGenerator<any> {
   const graph = await getGraph();
-  const config= {configurable: { thread_id: threadId }, version: "v2" as const};
-
-  const graphInput= action ==="resume" ? new Command({ resume: input }) : {
-    ...input,
-    thread_id: threadId,
-    stage2_data: [],
-    stage3_data: [],
-    stage4_data: [],
-    messages: [
-      new SystemMessage(STAGE2_SYSTEM_PROMPT),
-      new HumanMessage(`Stage 1 : Data:\n${JSON.stringify(input,null,2)}`)
-    ],
+  const config = {
+    configurable: { thread_id: threadId },
+    version: "v2" as const,
   };
+
+  const onboardingData = input?.onboarding_data ?? input;
+  const graphInput =
+    action === "resume"
+      ? new Command({ resume: input })
+      : {
+          ...input,
+          thread_id: threadId,
+          stage2_data: [],
+          stage3_data: [],
+          stage4_data: [],
+          risk_classifications: null,
+          messages: buildInitialMessages(onboardingData),
+        };
 
   for await (const result of graph.streamEvents(graphInput, config)) {
     yield result;
   }
 }
-
 
 export async function getThreadStateHistory(thread_id: string) {
   if (!thread_id) {
@@ -98,7 +99,6 @@ export async function getThreadStateHistory(thread_id: string) {
 
   const states: any[] = [];
 
-  // LangGraph async iterator
   const graph = await getGraph();
   for await (const state of graph.getStateHistory(config)) {
     states.push({
@@ -117,7 +117,7 @@ export async function getThreadStateHistory(thread_id: string) {
 }
 
 export async function getThreadCurrentState(thread_id: string) {
-  const config={configurable:{ thread_id: thread_id }};
+  const config = { configurable: { thread_id: thread_id } };
   const graph = await getGraph();
   return await graph.getState(config);
 }
@@ -126,7 +126,6 @@ export async function getThreadCurrentState(thread_id: string) {
  * Normalize response for frontend
  */
 function formatGraphResponse(result: any) {
-  // ✅ If graph interrupted → return question to frontend
   if (isInterrupted(result)) {
     const interrupts = result[INTERRUPT];
     const question = interrupts[0]?.value;
@@ -137,7 +136,6 @@ function formatGraphResponse(result: any) {
     };
   }
 
-  // ✅ If final policy generated
   if (result?.policies) {
     return {
       status: "completed",
@@ -145,10 +143,8 @@ function formatGraphResponse(result: any) {
     };
   }
 
-  // Fallback
   return {
     status: "running",
     data: result,
   };
 }
-

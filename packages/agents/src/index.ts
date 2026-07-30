@@ -22,3 +22,14 @@ export {
 export type { WorkflowState as MandateWorkflowState } from "./mandate";
 export { aiGovernancePolicySpec } from "./mandate/config/policySpec";
 export type { PolicySection } from "./mandate/config/policySpec";
+export {
+  classifyAISystems as mandateClassifyAISystems,
+  parseStage2Output as mandateParseStage2Output,
+} from "./mandate";
+export type {
+  ClassificationResult as MandateClassificationResult,
+  RiskClassification as MandateRiskClassification,
+  AISystemInput as MandateAISystemInput,
+  CompanyContext as MandateCompanyContext,
+  RiskTier as MandateRiskTier,
+} from "./mandate";

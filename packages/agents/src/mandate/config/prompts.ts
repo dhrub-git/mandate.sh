@@ -1,151 +1,148 @@
-// import fs from "fs";
-// import path from "path";
-// import { aiGovernancePolicySpec } from "./policySpec";
-// // In CommonJS (default TypeScript), __dirname already exists
-
-
-
-// // const basePath = new URL("../prompts/", import.meta.url);
-// const basePath = path.join(__dirname, "../prompts/");
-
-// export const STAGE2_SYSTEM_PROMPT = fs.readFileSync(
-//   path.join(basePath, "STAGE2_TRANSITION_PROMPT.md"),
-//   "utf-8"
-// );
-
-// export const STAGE3_SYSTEM_PROMPT = fs.readFileSync(
-//   path.join(basePath, "STAGE3_TRANSITION_PROMPT.md"),
-//   "utf-8"
-// );
-
-// export const STAGE4_SYSTEM_PROMPT = fs.readFileSync(
-//   path.join(basePath, "STAGE4_TRANSITION_PROMPT.md"),
-//   "utf-8"
-// );
-// export function buildPolicyGeneratorPrompt(
-//   onboardingData: any,
-// ) {
-//   return `
-// You are generating an AI Governance Policy for ${onboardingData?.Q1} 
-// (${onboardingData?.Q3} industry, ${onboardingData?.Q4} employees).
-
-// COMPANY CONTEXT:
-// - Role: {companyRole}
-// - Operating in: ${onboardingData?.Q1}
-// - EU AI Act applicable: {euAiActApplicable}
-// - Existing certifications: ${onboardingData?.Q8}
-// - Current governance: ${onboardingData?.Q9}
-// - AI systems risk summary: {riskSummary}
-
-// REGULATORY REQUIREMENTS (do not modify these citations):
-// {regulatoryText}
-
-// Generate sections:
-// ${JSON.stringify(aiGovernancePolicySpec.sections["4. Governance Structure"], null, 2)},
-// ${JSON.stringify(aiGovernancePolicySpec.sections["5. Roles & Responsibilities"], null, 2)},
-// ${JSON.stringify(aiGovernancePolicySpec.sections["6. Risk Appetite Statement"], null, 2)}
-
-// Use the regulatory citations verbatim.
-// Write for a compliance practitioner, not a lawyer.
-// Be specific and actionable.
-// Reference specific systems from the inventory by name where relevant.
-// `;
-// }
-
 import fs from "fs";
 import path from "path";
 import { aiGovernancePolicySpec } from "./policySpec";
-// Helper function to resolve prompt file paths
+import type { ClassificationResult } from "../classifier/types";
+import {
+  parseOnboardingData,
+  isEuAiActApplicable,
+  formatRiskSummary,
+  buildInventoryTableMarkdown,
+  buildRegulatoryText,
+  substitutePromptVars,
+} from "./onboardingContext";
+
 function getPromptPath(filename: string): string {
-  // In Next.js, prompts are in public/prompts directory
-  // process.cwd() gives the app root directory
-  const publicPath = path.join(process.cwd(), "public", "prompts", filename);
-  
-  // Check if running in Next.js context (web app)
-  if (fs.existsSync(publicPath)) {
-    return publicPath;
+  const candidates = [
+    // Next.js web app
+    path.join(process.cwd(), "public", "prompts", filename),
+    // Monorepo root → apps/web
+    path.join(process.cwd(), "apps", "web", "public", "prompts", filename),
+    // agents package relative to this file
+    path.join(__dirname, "../prompts", filename),
+    // agents package from monorepo root
+    path.join(
+      process.cwd(),
+      "packages",
+      "agents",
+      "src",
+      "mandate",
+      "prompts",
+      filename,
+    ),
+    // cwd is packages/agents
+    path.join(process.cwd(), "src", "mandate", "prompts", filename),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
   }
-  
-  // Fallback for running agents package standalone (tests, scripts)
-  const localPath = path.join(__dirname, "../prompts", filename);
-  if (fs.existsSync(localPath)) {
-    return localPath;
-  }
-  
-  // Monorepo fallback - go up to root and find packages/agents
-  const monorepoPath = path.join(
-    process.cwd(),
-    "packages",
-    "agents",
-    "src",
-    "mandate",
-    "prompts",
-    filename
+
+  throw new Error(
+    `Cannot find prompt file: ${filename}. Searched:\n${candidates.map((c) => `- ${c}`).join("\n")}`,
   );
-  if (fs.existsSync(monorepoPath)) {
-    return monorepoPath;
-  }
-  
-  throw new Error(`Cannot find prompt file: ${filename}. Searched:\n- ${publicPath}\n- ${localPath}\n- ${monorepoPath}`);
 }
-// Lazy load prompts to avoid errors during module initialization
+
 let _stage2Prompt: string | null = null;
 let _stage3Prompt: string | null = null;
 let _stage4Prompt: string | null = null;
+
 export function getSTAGE2_SYSTEM_PROMPT(): string {
   if (!_stage2Prompt) {
     _stage2Prompt = fs.readFileSync(
       getPromptPath("STAGE2_TRANSITION_PROMPT.md"),
-      "utf-8"
+      "utf-8",
     );
   }
   return _stage2Prompt;
 }
+
 export function getSTAGE3_SYSTEM_PROMPT(): string {
   if (!_stage3Prompt) {
     _stage3Prompt = fs.readFileSync(
       getPromptPath("STAGE3_TRANSITION_PROMPT.md"),
-      "utf-8"
+      "utf-8",
     );
   }
   return _stage3Prompt;
 }
+
 export function getSTAGE4_SYSTEM_PROMPT(): string {
   if (!_stage4Prompt) {
     _stage4Prompt = fs.readFileSync(
       getPromptPath("STAGE4_TRANSITION_PROMPT.md"),
-      "utf-8"
+      "utf-8",
     );
   }
   return _stage4Prompt;
 }
-// For backward compatibility
-export const STAGE2_SYSTEM_PROMPT = getSTAGE2_SYSTEM_PROMPT();
-export const STAGE3_SYSTEM_PROMPT = getSTAGE3_SYSTEM_PROMPT();
-export const STAGE4_SYSTEM_PROMPT = getSTAGE4_SYSTEM_PROMPT();
-export function buildPolicyGeneratorPrompt(onboardingData: any) {
-  return `
-You are generating an AI Governance Policy for ${onboardingData?.Q1} 
-(${onboardingData?.Q3} industry, ${onboardingData?.Q4} employees).
-COMPANY CONTEXT:
-- Role: {companyRole}
-- Operating in: ${onboardingData?.Q1}
-- EU AI Act applicable: {euAiActApplicable}
-- Existing certifications: ${onboardingData?.Q8}
-- Current governance: ${onboardingData?.Q9}
-- AI systems risk summary: {riskSummary}
-REGULATORY REQUIREMENTS (do not modify these citations):
-{regulatoryText}
-Generate sections:
-${JSON.stringify(aiGovernancePolicySpec.sections["4. Governance Structure"], null, 2)},
-${JSON.stringify(aiGovernancePolicySpec.sections["5. Roles & Responsibilities"], null, 2)},
-${JSON.stringify(aiGovernancePolicySpec.sections["6. Risk Appetite Statement"], null, 2)}
-Use the regulatory citations verbatim.
-Write for a compliance practitioner, not a lawyer.
-Be specific and actionable.
-Reference specific systems from the inventory by name where relevant.
-CRITICAL INSTRUCTIONS:
-- OUTPUT STRICTLY IN STANDARD MARKDOWN FORMAT ONLY.
-- DO NOT OUTPUT A JSON OBJECT. DO NOT USE \`\`\`json.
+
+export function buildStageSystemPrompt(
+  stage: 2 | 3 | 4,
+  onboardingData: unknown,
+  extras: Record<string, string> = {},
+): string {
+  const template =
+    stage === 2
+      ? getSTAGE2_SYSTEM_PROMPT()
+      : stage === 3
+        ? getSTAGE3_SYSTEM_PROMPT()
+        : getSTAGE4_SYSTEM_PROMPT();
+  return substitutePromptVars(template, onboardingData, extras);
+}
+
+
+export function buildPolicyGeneratorPrompt(
+  onboardingData: unknown,
+  riskClassifications?: ClassificationResult | null,
+): string {
+  const data = parseOnboardingData(onboardingData);
+  const euApplicable = isEuAiActApplicable(data);
+  const riskSummary = formatRiskSummary(riskClassifications);
+  const inventoryTable = buildInventoryTableMarkdown(riskClassifications);
+  const regulatoryText = buildRegulatoryText(data);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const sectionSpecs = Object.entries(aiGovernancePolicySpec.sections)
+    .map(
+      ([title, spec]) =>
+        `### ${title}\nMethod: ${spec.method}\nInputs: ${spec.inputs.join(", ")}\nGuidance: ${spec.generation_details}`,
+    )
+    .join("\n\n");
+
+  return `You are generating a complete AI Governance Policy for **${data.name}**
+(${data.industry.replace(/_/g, " ")} industry, ${data.employeeCount.replace(/_/g, " ") || "unknown size"} employees).
+
+## COMPANY CONTEXT
+- Company: ${data.name}
+- Address: ${data.address || "Not provided"}
+- Industry: ${data.industry.replace(/_/g, " ")}
+- AI role: ${data.aiRole.replace(/_/g, " ")}
+- Operating regions: ${data.operatingRegions.join(", ") || "Not specified"}
+- EU AI Act applicable: ${euApplicable ? "YES" : "NO / unclear — note residual extraterritorial risk"}
+- Existing certifications: ${data.certifications.length > 0 ? data.certifications.join(", ") : "None listed"}
+- Current governance: ${data.governance.replace(/_/g, " ")}
+
+## AI SYSTEMS RISK SUMMARY
+${riskSummary}
+
+## PRE-BUILT AI SYSTEM INVENTORY TABLE (use VERBATIM for section 3)
+${inventoryTable}
+
+## REGULATORY REQUIREMENTS (cite accurately; do not invent article numbers)
+${regulatoryText}
+
+## SECTIONS TO GENERATE
+Produce ALL of the following sections as \`##\` markdown headings (number them 1–8). Follow each section's method guidance:
+
+${sectionSpecs}
+
+## HARD RULES
+- Output STRICTLY standard Markdown. No JSON. No \`\`\`json fences.
+- For **3. AI System Inventory Summary**, reproduce the pre-built inventory table above verbatim (you may add a short intro paragraph).
+- For **2. Applicable Regulations**, use the regulatory requirements list; add a simple markdown table of framework / why applicable / key obligations.
+- For **8. Document Control**, include: organisation name, version 1.0, status Draft, effective date ${today}, approval authority (Board / AI Governance Committee), next annual review date.
+- Write for a compliance practitioner, not a lawyer.
+- Be specific and actionable. Reference inventoried systems by name where relevant.
+- If a risk tier is PROHIBITED or HIGH_RISK, the Risk Appetite and Governance sections MUST call out required controls explicitly.
 `;
 }
