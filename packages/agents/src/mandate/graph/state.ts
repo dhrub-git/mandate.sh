@@ -24,4 +24,9 @@ export interface WorkflowState {
 
   /** EU AI Act risk classification produced after Stage 2 inventory. */
   risk_classifications?: ClassificationResult | null;
+
+  /** Compact stage summaries for final policy generation (message hygiene). */
+  stage2_summary?: string;
+  stage3_summary?: string;
+  stage4_summary?: string;
 }

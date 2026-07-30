@@ -14,6 +14,7 @@ import {
   companyContextFromOnboarding,
   formatRiskSummary,
 } from "../config/onboardingContext";
+import { compactStageSummary } from "../config/stageSummaries";
 import {
   stageCompleteTool,
   getStageCompleteCall,
@@ -55,12 +56,17 @@ export async function stage2(state: any): Promise<Record<string, unknown>> {
     const riskSummary = formatRiskSummary(risk_classifications);
     console.log("Risk classifications:", risk_classifications.summary);
 
+    const stage2_summary = compactStageSummary(
+      2,
+      completeCall?.args.summary || aiMsg,
+    );
+
     const draftResponse = await model1.invoke([
       new SystemMessage(
         "You are an expert AI Governance Policy Drafter. Output ONLY the markdown text for the sections requested without conversational filler.",
       ),
       new HumanMessage(
-        `Generate a professional Markdown draft for the "Purpose & Scope" and "AI System Inventory" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 2 Output:\n${aiMsg || completeCall?.args.summary || ""}\n\nEU AI Act Risk Classification (include risk tiers in the inventory):\n${riskSummary}`,
+        `Generate a professional Markdown draft for the "Purpose & Scope" and "AI System Inventory" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 2 Summary:\n${stage2_summary}\n\nEU AI Act Risk Classification (include risk tiers in the inventory):\n${riskSummary}`,
       ),
     ]);
     console.log("Draft Policy 2 : \n", draftResponse.content?.toString());
@@ -88,8 +94,8 @@ export async function stage2(state: any): Promise<Record<string, unknown>> {
 stage 1 data:
 ${state.onboarding_data}
 
-stage 2 data:
-${aiMsg || completeCall?.args.summary || ""}
+stage 2 summary:
+${stage2_summary}
 
 EU AI Act risk classifications:
 ${JSON.stringify(risk_classifications, null, 2)}
@@ -109,7 +115,6 @@ ${JSON.stringify(risk_classifications, null, 2)}
       );
     }
 
-    // Drop unresolved tool_calls from the AI message for history cleanliness when we handled completion
     const completionResponse = completeCall
       ? {
           ...response,
@@ -119,8 +124,9 @@ ${JSON.stringify(risk_classifications, null, 2)}
 
     return {
       messages: [completionResponse, ...followUps, stage3System, stage3Human],
-      stage2_data: response,
+      stage2_data: [{ summary: stage2_summary, systems }],
       stage2_complete: true,
+      stage2_summary,
       draft_policy_2: draftResponse.content?.toString(),
       risk_classifications,
     };

@@ -13,6 +13,10 @@ import {
   buildInventoryTableMarkdown,
 } from "../config/onboardingContext";
 import {
+  buildCompactPolicyHandoff,
+  compactStageSummary,
+} from "../config/stageSummaries";
+import {
   stageCompleteTool,
   getStageCompleteCall,
   isStageMarkedComplete,
@@ -38,17 +42,22 @@ export async function stage4(
     const inventoryTable = buildInventoryTableMarkdown(
       state.risk_classifications,
     );
-    const stageSummary = aiMsg || completeCall?.args.summary || "";
+    const stage4_summary = compactStageSummary(
+      4,
+      completeCall?.args.summary || aiMsg,
+    );
 
     const draftResponse = await model1.invoke([
       new SystemMessage(
-        "You are an expert AI Governance Policy Drafter. Output ONLY the markdown text for the sections requested without conversational filler.",
+        "You are an expert AI Governance Policy Drafter. Output ONLY the markdown text for the sections requested without conversational filler. Prefer Risk Appetite content — Applicable Regulations will be deterministically overwritten later.",
       ),
       new HumanMessage(
-        `Generate a professional Markdown draft for the "Applicable Regulations" and "Risk Appetite Statement" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 4 Output:\n${stageSummary}\n\nEU AI Act Risk Classification:\n${riskSummary}\n\nInventory table (reference in risk appetite):\n${inventoryTable}`,
+        `Generate a professional Markdown draft focused on the "Risk Appetite Statement" (and optionally a short Applicable Regulations stub) based on:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 4 Summary:\n${stage4_summary}\n\nEU AI Act Risk Classification:\n${riskSummary}\n\nInventory table:\n${inventoryTable}`,
       ),
     ]);
     console.log("Draft Policy 4 : \n", draftResponse.content?.toString());
+
+    const draft4 = draftResponse.content?.toString() ?? "";
 
     const policySystem = new SystemMessage(
       buildPolicyGeneratorPrompt(
@@ -57,30 +66,18 @@ export async function stage4(
       ),
     );
 
-    const policyData = new HumanMessage(`
-stage 1 data:
-${state.onboarding_data}
-
-stage 2 data:
-${JSON.stringify(state.stage2_data, null, 2)}
-
-stage 3 data:
-${JSON.stringify(state.stage3_data, null, 2)}
-
-stage 4 data:
-${stageSummary}
-
-EU AI Act risk classifications:
-${JSON.stringify(state.risk_classifications ?? null, null, 2)}
-
-Interim drafts (merge/refine; do not ignore):
---- draft_policy_2 ---
-${state.draft_policy_2 ?? ""}
---- draft_policy_3 ---
-${state.draft_policy_3 ?? ""}
---- draft_policy_4 ---
-${draftResponse.content?.toString() ?? ""}
-`);
+    const policyData = new HumanMessage(
+      buildCompactPolicyHandoff({
+        onboardingData: state.onboarding_data,
+        stage2Summary: state.stage2_summary,
+        stage3Summary: state.stage3_summary,
+        stage4Summary: stage4_summary,
+        riskJson: JSON.stringify(state.risk_classifications ?? null, null, 2),
+        draft2: state.draft_policy_2,
+        draft3: state.draft_policy_3,
+        draft4,
+      }),
+    );
 
     const followUps = [];
     if (completeCall?.id) {
@@ -101,9 +98,10 @@ ${draftResponse.content?.toString() ?? ""}
     );
     return {
       messages: [completionResponse, ...followUps, policySystem, policyData],
-      stage4_data: [response],
+      stage4_data: [{ summary: stage4_summary }],
       stage4_complete: true,
-      draft_policy_4: draftResponse.content?.toString(),
+      stage4_summary,
+      draft_policy_4: draft4,
     };
   }
 

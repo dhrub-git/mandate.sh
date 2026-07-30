@@ -9,6 +9,7 @@ import { interrupt } from "@langchain/langgraph";
 import { WorkflowState } from "../graph/state";
 import { buildStageSystemPrompt } from "../config/prompts";
 import { formatRiskSummary } from "../config/onboardingContext";
+import { compactStageSummary } from "../config/stageSummaries";
 import {
   stageCompleteTool,
   getStageCompleteCall,
@@ -31,23 +32,6 @@ export async function stage3(
   const completeCall = getStageCompleteCall(response, 3);
 
   const riskSummary = formatRiskSummary(state.risk_classifications);
-  const stage4System = new SystemMessage(
-    buildStageSystemPrompt(4, state.onboarding_data),
-  );
-
-  const stage4Human = new HumanMessage(`
-stage 1 data:
-${state.onboarding_data}
-
-stage 2 data:
-${JSON.stringify(state.stage2_data)}
-
-stage 3 data:
-${aiMsg || completeCall?.args.summary || ""}
-
-EU AI Act risk classifications:
-${riskSummary}
-`);
 
   if (
     isStageMarkedComplete(response, 3, [
@@ -61,6 +45,29 @@ ${riskSummary}
       completeCall?.args.providerOnlySkip === true ||
       aiMsg.includes("[STAGE3_SKIPPED — PROVIDER ONLY]");
 
+    const stage3_summary = compactStageSummary(
+      3,
+      completeCall?.args.summary || aiMsg,
+    );
+
+    const stage4System = new SystemMessage(
+      buildStageSystemPrompt(4, state.onboarding_data),
+    );
+
+    const stage4Human = new HumanMessage(`
+stage 1 data:
+${state.onboarding_data}
+
+stage 2 summary:
+${state.stage2_summary ?? "(see stage2_data)"}
+
+stage 3 summary:
+${stage3_summary}
+
+EU AI Act risk classifications:
+${riskSummary}
+`);
+
     const drafter = skipped ? model : model1;
 
     const draftResponse = await drafter.invoke([
@@ -68,7 +75,7 @@ ${riskSummary}
         "You are an expert AI Governance Policy Drafter. Output ONLY the markdown text for the sections requested without conversational filler.",
       ),
       new HumanMessage(
-        `Generate a professional Markdown draft for the "Governance Structure" and "Roles & Responsibilities" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage Output:\n${aiMsg || completeCall?.args.summary || ""}\n\nRisk context:\n${riskSummary}`,
+        `Generate a professional Markdown draft for the "Governance Structure" and "Roles & Responsibilities" sections based on the following data:\n\nOnboarding Data:\n${state.onboarding_data}\n\nStage 3 Summary:\n${stage3_summary}\n\nRisk context:\n${riskSummary}`,
       ),
     ]);
     console.log("Draft Policy 3 : \n", draftResponse.content?.toString());
@@ -89,8 +96,9 @@ ${riskSummary}
 
     return {
       messages: [completionResponse, ...followUps, stage4System, stage4Human],
-      stage3_data: [response],
+      stage3_data: [{ summary: stage3_summary, skipped }],
       stage3_complete: true,
+      stage3_summary,
       draft_policy_3: draftResponse.content?.toString(),
     };
   }

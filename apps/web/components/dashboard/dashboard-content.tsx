@@ -5,6 +5,12 @@ import {
   type MandateClassificationResult,
 } from "@repo/agents";
 import { extractCompanyProfile } from "@/utils/extract-company-profile";
+import {
+  getOrCreateSessionUser,
+  recordOwnedThread,
+  sessionOwnsThread,
+} from "@/lib/session";
+import { redirect } from "next/navigation";
 
 type Props = {
   threadId: string;
@@ -17,17 +23,31 @@ export default async function DashboardContent({
   initialQuestion: urlQuestion,
   initialStatus: urlStatus,
 }: Props) {
+  const sessionUser = await getOrCreateSessionUser();
+
   let companyProfile;
   let finalPolicies: string | undefined;
   let initialRiskClassifications: MandateClassificationResult | null = null;
   let initialDrafts: Record<string, string> = {};
   let initialStagesComplete: string[] = [];
+  let onboardingCompanyId: string | undefined;
 
   try {
     const graphState = await mandateGetThreadCurrentState(threadId);
     const values = graphState?.values;
 
     companyProfile = extractCompanyProfile(values?.onboarding_data);
+
+    if (typeof values?.onboarding_data === "string") {
+      try {
+        const parsed = JSON.parse(values.onboarding_data);
+        if (typeof parsed?.companyId === "string") {
+          onboardingCompanyId = parsed.companyId;
+        }
+      } catch {
+        /* ignore */
+      }
+    }
 
     if (values?.policies) {
       finalPolicies = values.policies;
@@ -50,6 +70,25 @@ export default async function DashboardContent({
     if (values?.policies) initialStagesComplete.push("policy_generator");
   } catch (err) {
     console.warn("Graph state fetch failed:", err);
+  }
+
+  // Auth-lite: session must own the thread (or match onboarding companyId and claim it)
+  let owns = await sessionOwnsThread(sessionUser, threadId);
+  if (
+    !owns &&
+    sessionUser.companyId &&
+    onboardingCompanyId &&
+    sessionUser.companyId === onboardingCompanyId
+  ) {
+    await recordOwnedThread(sessionUser.companyId, threadId);
+    owns = true;
+  }
+
+  if (sessionUser.companyId && !owns) {
+    console.warn(
+      `Session user ${sessionUser.id} denied access to thread ${threadId}`,
+    );
+    redirect("/onboarding");
   }
 
   if (urlQuestion && urlStatus) {

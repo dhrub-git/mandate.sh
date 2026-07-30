@@ -1,33 +1,14 @@
 import { ContentBlock } from "@langchain/core/messages";
 import { model } from "../config/model";
 import { WorkflowState } from "../graph/state";
-import { saveAdditionalData, createPolicy } from "@repo/database";
+import {
+  saveAdditionalData,
+  createPolicy,
+  parseSections,
+} from "@repo/database";
 import { applyDeterministicSections } from "../config/deterministicSections";
 import { parseOnboardingData } from "../config/onboardingContext";
 import { sanitizeMessages, contentToString } from "./messageUtils";
-
-function parseSections(
-  policyText?: string | null,
-): { title: string; content: string }[] {
-  if (!policyText || typeof policyText !== "string") return [];
-
-  const sectionRegex = /^##\s+(.+?)\n([\s\S]*?)(?=^##\s+|\Z)/gm;
-
-  const sections: { title: string; content: string }[] = [];
-  let match: RegExpExecArray | null;
-
-  while ((match = sectionRegex.exec(policyText)) !== null) {
-    const rawTitle = match[1]?.trim();
-    const content = match[2]?.trim() ?? "";
-
-    if (!rawTitle) continue;
-
-    const title = rawTitle.replace(/^\d+[\.\)]\s*/, "").trim();
-    sections.push({ title, content });
-  }
-
-  return sections;
-}
 
 function getContentAsString(
   content: string | (ContentBlock | ContentBlock.Text)[],

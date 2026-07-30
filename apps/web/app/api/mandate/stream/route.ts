@@ -3,6 +3,10 @@ import {
   mandateGetThreadCurrentState,
 } from "@repo/agents";
 import { NextRequest } from "next/server";
+import {
+  getOrCreateSessionUser,
+  sessionOwnsThread,
+} from "@/lib/session";
 const NODE_LABELS: Record<string, string> = {
   stage_2: "AI Inventory",
   stage_3: "Governance Essentials",
@@ -42,6 +46,21 @@ export async function POST(req: NextRequest) {
       },
     );
   }
+
+  const sessionUser = await getOrCreateSessionUser();
+  if (sessionUser.companyId) {
+    const owns = await sessionOwnsThread(sessionUser, threadId);
+    if (!owns) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: thread is not owned by this session" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  }
+
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();

@@ -1,5 +1,6 @@
 import { db } from ".";
 import { PolicyStatus } from "@prisma/client";
+import { parseSections } from "./parseSections";
 /**
  * Creates a new policy
  * @param companyId 
@@ -59,7 +60,7 @@ const VALID_TRANSITIONS: Record<PolicyStatus, PolicyStatus[]> = {
 };
 
 function validateTransition(from: PolicyStatus, to: PolicyStatus): boolean {
-    return VALID_TRANSITIONS[from].includes(to);
+    return (VALID_TRANSITIONS[from] ?? []).includes(to);
 }
 
 
@@ -119,29 +120,6 @@ type PolicySection = {
     title: string;
     content: string;
 };
-
-function parseSections(policyText?: string | null): { title: string; content: string }[] {
-    if (!policyText || typeof policyText !== "string") return [];
-
-    const sectionRegex = /^##\s+(.+?)\n([\s\S]*?)(?=^##\s+|\Z)/gm;
-
-    const sections: { title: string; content: string }[] = [];
-    let match: RegExpExecArray | null;
-
-    while ((match = sectionRegex.exec(policyText)) !== null) {
-        const rawTitle = match[1]?.trim();
-        const content = match[2]?.trim() ?? "";
-
-        if (!rawTitle) continue;
-
-        // Optional: clean numbering like "1. Introduction" → "Introduction"
-        const title = rawTitle.replace(/^\d+[\.\)]\s*/, "").trim();
-
-        sections.push({ title, content });
-    }
-
-    return sections;
-}
 
 export async function updatePolicyContent(
   threadId: string,

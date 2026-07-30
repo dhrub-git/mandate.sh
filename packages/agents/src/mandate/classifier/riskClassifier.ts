@@ -24,7 +24,24 @@ const EMOTION_RECOGNITION_KEYWORDS = ["emotion recognition", "emotion detection"
 
 const BIOMETRIC_KEYWORDS = ["biometric", "facial recognition", "fingerprint", "voice identification", "iris scan", "face detection"];
 const EDUCATION_KEYWORDS = ["exam", "scoring", "admission", "grading", "student assessment", "learning evaluation"];
-const EMPLOYMENT_KEYWORDS = ["recruit", "hire", "hiring", "terminat", "firing", "promot", "performance review", "cv screening", "resume screening", "worker management"];
+const EMPLOYMENT_KEYWORDS = [
+  "recruit",
+  "hire",
+  "hiring",
+  "terminat",
+  "firing",
+  "promot",
+  "performance review",
+  "cv screening",
+  "resume screening",
+  "worker management",
+  "candidate screening",
+  "job applicant",
+  "talent acquisition",
+  "employee monitoring",
+  "workforce management",
+];
+
 const CREDIT_KEYWORDS = ["credit", "creditworth", "loan", "insurance scoring", "eligibility", "benefit entitlement", "emergency dispatch", "emergency priorit"];
 const MIGRATION_KEYWORDS = ["migration", "asylum", "border", "visa", "immigration", "refugee"];
 const JUSTICE_KEYWORDS = ["justice", "court", "judicial", "election", "democratic process", "legal research", "sentencing"];
@@ -124,11 +141,14 @@ function classifySystem(
     };
   }
 
-  // Domain 3: Education
+  // Domain 3: Education — use-case driven (not only EDUCATION industry)
   if (
-    industry === "EDUCATION" &&
-    (hasCategory(cats, "Classification") || hasCategory(cats, "Prediction") || hasCategory(cats, "Autonomous decision-making")) &&
-    purposeMatches(purpose, EDUCATION_KEYWORDS)
+    purposeMatches(purpose, EDUCATION_KEYWORDS) &&
+    (hasCategory(cats, "Classification") ||
+      hasCategory(cats, "Prediction") ||
+      hasCategory(cats, "Decision support") ||
+      hasCategory(cats, "Autonomous decision-making") ||
+      industry === "EDUCATION")
   ) {
     return {
       systemName, tier: "HIGH_RISK", tierLevel: 2,
@@ -138,15 +158,20 @@ function classifySystem(
     };
   }
 
-  // Domain 4: Employment
+  // Domain 4: Employment — Annex III is use-case based (any industry)
   if (
-    industry === "HR" &&
-    (hasCategory(cats, "Classification") || hasCategory(cats, "Prediction") || hasCategory(cats, "Decision support") || hasCategory(cats, "Autonomous decision-making")) &&
-    purposeMatches(purpose, EMPLOYMENT_KEYWORDS)
+    purposeMatches(purpose, EMPLOYMENT_KEYWORDS) &&
+    (hasCategory(cats, "Classification") ||
+      hasCategory(cats, "Prediction") ||
+      hasCategory(cats, "Decision support") ||
+      hasCategory(cats, "Autonomous decision-making") ||
+      hasCategory(cats, "Recommendation") ||
+      industry === "HR" ||
+      cats.length === 0)
   ) {
     return {
       systemName, tier: "HIGH_RISK", tierLevel: 2,
-      reasoning: "AI system used for employment decisions (recruitment, promotion, termination) is classified as high-risk.",
+      reasoning: "AI system used for employment decisions (recruitment, promotion, termination, or worker management) is classified as high-risk under Annex III.",
       article: "Art. 6(2), Annex III", annexDomain: "4. Employment & worker management",
       requirements: HIGH_RISK_REQUIREMENTS,
     };

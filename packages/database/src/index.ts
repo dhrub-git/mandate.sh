@@ -10,7 +10,8 @@ const connectionString = process.env.DATABASE_URL
 
 // 2. Create the driver adapter
 const pool = new Pool({ connectionString })
-const adapter = new PrismaPg(pool)
+// Prisma adapter typings can disagree with the installed `pg` Pool types.
+const adapter = new PrismaPg(pool as any)
 
 // 3. Pass the adapter to the PrismaClient
 export const db = new PrismaClient({ adapter })
@@ -22,6 +23,7 @@ export {
     updatePolicy,
     updatePolicyContent,
 } from "./policy";
+export { parseSections } from "./parseSections";
 export {
     saveAdditionalData,
     getCompanyInfo,
