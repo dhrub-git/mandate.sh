@@ -19,6 +19,7 @@ import { PolicyVersionTimeline } from "../policy/PolicyVersionTimeline";
 import { PolicyActionButtons } from "../policy/ActionButton";
 import VariantPanel from "../policyVariant/VariantPanel";
 import RiskClassificationPanel from "../policy/RiskClassificationPanel";
+import NotificationCenter from "../NotificationCenter";
 import type { MandateClassificationResult } from "@repo/agents";
 
 type MainTabType = "MASTER" | "VARIANTS";
@@ -28,6 +29,7 @@ interface PolicyDocuments {
 }
 
 export default function LeftPanel(props: {
+  threadId?: string;
   policies: PolicyDocuments;
   companyProfile: any;
   isStreaming: boolean;
@@ -54,6 +56,7 @@ export default function LeftPanel(props: {
   isGeneratingSummary: boolean;
 }) {
   const {
+    threadId,
     policies,
     companyProfile,
     isStreaming,
@@ -115,12 +118,15 @@ export default function LeftPanel(props: {
               </p>
             </div>
 
-            {isStreaming && (
-              <div className="flex items-center gap-1 text-xs text-primary shrink-0">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Updating...</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 shrink-0">
+              <NotificationCenter threadId={threadId} />
+              {isStreaming && (
+                <div className="flex items-center gap-1 text-xs text-primary">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Generating...</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Actions row */}

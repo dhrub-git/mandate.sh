@@ -15,7 +15,8 @@ model User {
   updatedAt DateTime @updatedAt
   companyId String?
 
-  company Company? @relation(fields: [companyId], references: [id])
+  company       Company?       @relation(fields: [companyId], references: [id])
+  notifications Notification[]
 }
 
 model Company {
@@ -34,8 +35,9 @@ model Company {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  users    User[]
-  policies Policy[]
+  users         User[]
+  policies      Policy[]
+  notifications Notification[]
 }
 
 model Policy {
@@ -51,12 +53,35 @@ model Policy {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
-  company  Company         @relation(fields: [companyId], references: [id])
-  parent   Policy?         @relation("PolicyVersioning", fields: [parentId], references: [id], onDelete: Cascade)
-  policies Policy[]        @relation("PolicyVersioning")
-  variants PolicyVariant[]
+  company       Company         @relation(fields: [companyId], references: [id])
+  parent        Policy?         @relation("PolicyVersioning", fields: [parentId], references: [id], onDelete: Cascade)
+  policies      Policy[]        @relation("PolicyVersioning")
+  variants      PolicyVariant[]
+  notifications Notification[]
 
   @@unique([threadId, version])
+  @@index([threadId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  companyId String
+  userId    String?
+  threadId  String?
+  policyId  String?
+  type      NotificationType
+  title     String
+  body      String           @db.Text
+  metadata  Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  policy  Policy? @relation(fields: [policyId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, createdAt])
+  @@index([userId, readAt])
   @@index([threadId])
 }
 
@@ -79,6 +104,14 @@ enum PolicyVariantType {
   COMPREHENSIVE_POLICY
   VENDOR_REQUIREMENTS
   CODING_STANDARDS
+}
+
+enum NotificationType {
+  POLICY_CREATED
+  POLICY_STATUS_CHANGED
+  POLICY_REFINED
+  WORKFLOW_COMPLETED
+  SYSTEM
 }
 
 enum PolicyStatus {

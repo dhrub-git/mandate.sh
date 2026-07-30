@@ -45,6 +45,13 @@ GEMINI_API_KEY=...
 OPENAI_API_KEY=...
 ```
 
+Optional notification delivery:
+
+```bash
+NOTIFICATION_WEBHOOK_URL=https://hooks.example.com/mandate
+NOTIFICATION_WEBHOOK_SECRET=optional-bearer-token
+```
+
 ## Local Development
 
 Install dependencies:

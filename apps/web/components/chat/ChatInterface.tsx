@@ -460,6 +460,7 @@ export function ChatInterface({
       <ChatLayout
         left={
           <LeftPanel
+            threadId={threadId}
             policies={PolicyDocumentsState}
             companyProfile={companyProfile}
             isStreaming={isStreaming}
