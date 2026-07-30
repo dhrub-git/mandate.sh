@@ -38,14 +38,14 @@ export async function stage4(state: WorkflowState) {
 
   const aiMsg = response.content?.toString().trim() || "";
 
-  console.log("Stage 4 AI:", aiMsg);
+  // console.log("Stage 4 AI:", aiMsg);
 
   if (aiMsg.includes("[STAGE4_COMPLETE]")) {
     const policySystem = new SystemMessage(
       buildPolicyGeneratorPrompt(state.onboarding_data),
     );
-    console.log(`policy prompt \n ${policySystem}`);
-    console.log("**********************************************************");
+    // console.log(`policy prompt \n ${policySystem}`);
+    // console.log("**********************************************************");
     const policyData = new HumanMessage(`
                   stage 1 data:
                   ${state.onboarding_data}
@@ -58,8 +58,9 @@ export async function stage4(state: WorkflowState) {
                   stage 4 data : ${response.content}
                   `);
 
-    console.log(`policy data \n ${policyData}`);
-    console.log("**********************************************************");
+    // console.log(`policy data \n ${policyData}`);
+    // console.log("**********************************************************");
+    console.log("Stage 4 Completed. Preparing to generate final policy draft...");
     return {
       messages: [response, policySystem, policyData],
       stage4_data: [response],

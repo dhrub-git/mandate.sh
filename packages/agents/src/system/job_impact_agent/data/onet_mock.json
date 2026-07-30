@@ -1,0 +1,44 @@
+{
+  "Content Marketing Manager": [
+    "Research SEO keywords and audience intent",
+    "Draft blog posts and marketing copy",
+    "Edit and proofread content",
+    "Coordinate with design and social media teams",
+    "Analyze content performance metrics",
+    "Develop content strategy and editorial calendar"
+  ],
+
+  "Customer Service Representative": [
+    "Answer customer inquiries via phone and email",
+    "Resolve billing and service complaints",
+    "Document customer interactions in CRM systems",
+    "Escalate complex issues to supervisors",
+    "Provide product and service information",
+    "Handle emotionally distressed customers"
+  ],
+
+  "Junior Software Tester": [
+    "Write test cases based on requirements",
+    "Execute manual test cases",
+    "Log bugs in tracking systems",
+    "Verify bug fixes",
+    "Collaborate with developers on issue resolution"
+  ],
+
+  "HR Recruiter": [
+    "Screen resumes and job applications",
+    "Schedule interviews with candidates",
+    "Conduct initial HR interviews",
+    "Coordinate with hiring managers",
+    "Evaluate cultural fit and soft skills",
+    "Maintain candidate databases"
+  ],
+
+  "Financial Analyst": [
+    "Collect financial data from internal systems",
+    "Build financial models and forecasts",
+    "Analyze financial performance",
+    "Prepare reports for stakeholders",
+    "Interpret market and economic trends"
+  ]
+}

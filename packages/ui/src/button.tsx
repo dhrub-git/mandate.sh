@@ -10,7 +10,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-primary text-white shadow-sm hover:bg-accent",
+        primary: "bg-primary text-primary-foreground shadow-sm hover:bg-accent",
         secondary:
           "bg-background border-2 border-primary text-primary hover:bg-primary/5",
         ghost: "hover:bg-accent/10 hover:text-accent-foreground",
@@ -25,6 +25,11 @@ const buttonVariants = cva(
         sm: "h-9 rounded-md px-3 text-sm",
         lg: "h-12 rounded-md px-8 text-lg",
         icon: "h-10 w-10",
+        "icon-xs":
+          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm":
+          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+        "icon-lg": "size-9",
       },
     },
     defaultVariants: {

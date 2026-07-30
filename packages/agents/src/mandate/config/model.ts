@@ -6,7 +6,7 @@ dotenv.config();
 export const model = new ChatOpenAI({
   model: "gpt-5.4-mini",
   temperature: 0,
-  apiKey: process.env.OPENAI_API_KEY1,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 

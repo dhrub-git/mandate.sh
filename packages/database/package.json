@@ -11,6 +11,8 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev --name=%npm_config_name% --create-only",
+    "db:reset": "prisma migrate reset -f",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "check-types": "tsc --noEmit"
